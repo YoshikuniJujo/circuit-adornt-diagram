@@ -3,7 +3,35 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    cabal-file:
+      size: 1841
+      sha256: dcf88a87adb121a466db6fd7302643975f2332feb5608beaa4bd97e6522dbd7f
+    name: circuit-adornt-build
+    version: 0.1.0.0
+    git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
+    pantry-tree:
+      size: 775
+      sha256: 299d7217fb6a462ddbdca6fdaf1f94c6ab161e3932ab215510ede0cdc08037fb
+    commit: c365dc1defa918a884056e17166a54e32e718c5d
+  original:
+    git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
+    commit: c365dc1defa918a884056e17166a54e32e718c5d
+- completed:
+    cabal-file:
+      size: 2725
+      sha256: 4a22555e5f6b1e6fe7d0d75eb122f11345965f9d590534794ec27b3675e6c2b7
+    name: circuit-diagram-dsl
+    version: 0.1.0.0
+    git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
+    pantry-tree:
+      size: 1238
+      sha256: 5ab62ceb6a5af6d86b51c0c6a96613f3d54511ba9e90a117b4810a22dc8e40d2
+    commit: 80747ae7dc3b977f7c51ab96f4bfebf6ff64be23
+  original:
+    git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
+    commit: 80747ae7dc3b977f7c51ab96f4bfebf6ff64be23
 snapshots:
 - completed:
     size: 523443

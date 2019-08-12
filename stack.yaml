@@ -39,7 +39,11 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps:
+    - git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
+      commit: c365dc1defa918a884056e17166a54e32e718c5d
+    - git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
+      commit: 80747ae7dc3b977f7c51ab96f4bfebf6ff64be23
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
