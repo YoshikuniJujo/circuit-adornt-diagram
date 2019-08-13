@@ -40,3 +40,8 @@ sampleNorGate :: (OWire, CBState)
 sampleNorGate = (`runState` initCBState) $ do
 	(_, _, o) <- norGate
 	return o
+
+sampleXorGate :: (OWire, CBState)
+sampleXorGate = (`runState` initCBState) $ do
+	(_, _, o) <- xorGate
+	return o

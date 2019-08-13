@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TupleSections #-}
 {-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
 module Circuit.Adornt.Diagram where
@@ -15,36 +15,43 @@ import Circuit.Adornt.Builder
 newtype BG = BG BasicGate deriving Show
 
 instance ElementIdable BG where
-	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
 	elementIdGen (BG (AndGate iw1 iw2)) =
 		"AndGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
 	elementIdGen (BG (OrGate iw1 iw2)) =
 		"OrGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
-	elementIdGen _ = error "not yet implemented 1"
+	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
+	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
+	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
 diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
 diagramM cbs mpos [o] = case cbsGate cbs  !? o of
 	Just e -> do
-		(ips, iws) <- case e of 
-			NotGate iw' -> do
-				ip' <- inputPosition =<< lift . maybe (Left "Oops") Right =<< case mpos of
-					Nothing -> putElement0 (BG e) notGateD
-					Just ps -> putElement (BG e) notGateD ps
-				return ([ip'], [iw'])
+		mipsiws <- case e of 
 			AndGate iw1 iw2 -> do
 				(ip1, ip2) <- (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2)
 					=<< lift . maybe (Left "Oops2") Right =<< case mpos of
 						Nothing -> putElement0 (BG e) andGateD
 						Just ps -> putElement (BG e) andGateD ps
-				return ([ip1, ip2], [iw1, iw2])
+				return $ Just ([ip1, ip2], [iw1, iw2])
 			OrGate iw1 iw2 -> do
 				(ip1, ip2) <- (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2)
 					=<< lift . maybe (Left "Oops2") Right =<< case mpos of
 						Nothing -> putElement0 (BG e) orGateD
 						Just ps -> putElement (BG e) orGateD ps
-				return ([ip1, ip2], [iw1, iw2])
-			_ -> lift $ Left "Oops!"
-		nextDiagramM cbs e ips iws
+				return $ Just ([ip1, ip2], [iw1, iw2])
+			NotGate iw' -> do
+				ip' <- inputPosition =<< lift . maybe (Left "Oops3") Right =<< case mpos of
+					Nothing -> putElement0 (BG e) notGateD
+					Just ps -> putElement (BG e) notGateD ps
+				return $ Just ([ip'], [iw'])
+			IdGate iw' -> do
+				mlp <- case mpos of
+					Nothing -> putElement0 (BG e) hLineD
+					Just ps -> putElement (BG e) hLineD ps
+				mip' <- maybe (return Nothing) ((Just <$>) . inputPosition) mlp
+				return $ (, [iw']) . (: []) <$> mip'
+			bg -> lift . Left $ "diagramM " ++ show bg
+		maybe (return ()) (uncurry $ nextDiagramM cbs e) mipsiws
 		return e
 	_ -> lift $ Left "not yet implemented 2"
 diagramM _ _ _ = lift $ Left "not yet implemented 3"
