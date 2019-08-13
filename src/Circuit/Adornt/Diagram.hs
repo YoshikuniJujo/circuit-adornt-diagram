@@ -15,6 +15,7 @@ import Circuit.Adornt.Builder
 data BG
 	= BG BasicGate
 	| BGLabel BasicGate Int
+	| BGBranch BasicGate Int
 	deriving Show
 
 instance ElementIdable BG where
@@ -25,6 +26,7 @@ instance ElementIdable BG where
 	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
 	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
 	elementIdGen (BGLabel bg n) = "Label-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
+	elementIdGen (BGBranch bg n) = "Branch-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
 diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
@@ -63,38 +65,49 @@ diagramM _ _ _ = lift $ Left "not yet implemented 3"
 nextDiagramM :: CBState -> BasicGate -> [Pos] -> [IWire] -> DiagramMapM ()
 nextDiagramM cbs e [ip] [iw] = do
 	case cbsWireConn cbs !? iw of
-		Just [(o', fo)] -> do
-			ip' <- inputPosition
-				=<< newElement (BGLabel e 0)
-					(uncurry hLineTextD $ mkLabel fo) ip
-			bg <- diagramM cbs (Just ip') [o']
-			connectLine (BG e) (BGLabel e 0)
-			connectLine (BGLabel e 0) (BG bg)
+		Just ofos -> do
+			(_, nbg) <- nextDiagramMList cbs e ip ofos 0
+			connectLine (BG e) nbg
+		Nothing -> return ()
+nextDiagramM cbs e [ip1, ip2] [iw1, iw2] = do
+	n <- case cbsWireConn cbs !? iw1 of
+		Just ofos -> do
+			(n, nbg) <- nextDiagramMList cbs e ip1 ofos 1
+			connectLine1 (BG e) nbg
+			return n
+		Nothing -> return 1
+	case cbsWireConn cbs !? iw2 of
+		Just ofos -> do
+			(_, nbg) <- nextDiagramMList cbs e ip2 ofos n
+			connectLine2 (BG e) nbg
 			return ()
 		Nothing -> return ()
-		_ -> lift $ Left "not yet implemented 4"
-nextDiagramM cbs e [ip1, ip2] [iw1, iw2] = do
-	case cbsWireConn cbs !? iw1 of
-		Just [(o', fo)] -> do
-			ip' <- inputPosition
-				=<< newElement (BGLabel e 1)
-					(uncurry hLineTextD $ mkLabel fo) ip1
-			bg <- diagramM cbs (Just ip') [o']
-			connectLine1 (BG e) (BGLabel e 1)
-			connectLine (BGLabel e 1) (BG bg)
-		Nothing -> return ()
-		_ -> lift $ Left "not yet implemented 5"
-	case cbsWireConn cbs !? iw2 of
-		Just [(o', fo)] -> do
-			ip' <- inputPosition
-				=<< newElement (BGLabel e 2)
-					(uncurry hLineTextD $ mkLabel fo) ip2
-			bg <- diagramM cbs (Just ip') [o']
-			connectLine2 (BG e) (BGLabel e 2)
-			connectLine (BGLabel e 2) (BG bg)
-		Nothing -> return ()
-		_ -> lift $ Left "not yet implemented 6"
 nextDiagramM _ _ _ _ = lift $ Left "Oops!!!!!!!!!!!!!!!!!!"
+
+nextDiagramMList :: CBState ->
+	BasicGate -> Pos -> [(OWire, FromOWire)] -> Int -> DiagramMapM (Int, BG)
+nextDiagramMList _ _ _ [] _ = lift $ Left "nextDiagramMList: shouldn't take null"
+nextDiagramMList cbs e ip [ofo] n = do
+	nbg <- nextDiagramM1 cbs e ip ofo n
+	return (n + 1, nbg)
+nextDiagramMList cbs e ip (ofo : ofos) n = do
+	lp <- newElement (BGBranch e n) branchD ip
+	ip1 <- inputPosition1 lp
+	ip2 <- inputPosition2 lp
+	nbg <- nextDiagramM1 cbs e ip1 ofo n
+	connectLine1 (BGBranch e n) nbg
+	(n', nbg') <- nextDiagramMList cbs e ip2 ofos (n + 1)
+	connectLine2 (BGBranch e n) nbg'
+	return (n' + 1, BGBranch e n)
+
+nextDiagramM1 :: CBState ->
+	BasicGate -> Pos -> (OWire, FromOWire) -> Int -> DiagramMapM BG
+nextDiagramM1 cbs e ip (o', fo) n = do
+	ip' <- inputPosition
+		=<< newElement (BGLabel e n) (uncurry hLineTextD $ mkLabel fo) ip
+	bg <- diagramM cbs (Just ip') [o']
+	connectLine (BGLabel e n) (BG bg)
+	return $ BGLabel e n
 
 mkLabel :: FromOWire -> (String, String)
 mkLabel ((lo, poso), (li, posi)) =

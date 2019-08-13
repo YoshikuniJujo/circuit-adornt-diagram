@@ -64,3 +64,27 @@ sample2 = (`runState` initCBState) $ do
 	connectWire64 no a
 	connectWire64 o ni'
 	return no'
+
+sampleBranch :: (OWire, CBState)
+sampleBranch = (`runState` initCBState) $ do
+	(_ni, no) <- notGate
+	(_ni', no') <- notGate
+	(ni'', no'') <- notGate
+	connectWire (no, 32, 0) (ni'', 32, 32)
+	connectWire (no', 32, 0) (ni'', 32, 0)
+	return no''
+
+sampleBranch2 :: (OWire, CBState)
+sampleBranch2 = (`runState` initCBState) $ do
+	(a, b, o) <- andGate
+	(_ni0, no0) <- notGate
+	(_ni1, no1) <- notGate
+	(_ni2, no2) <- notGate
+	(_ni3, no3) <- notGate
+	(_ni4, no4) <- notGate
+	connectWire (no0, 32, 0) (a, 32, 0)
+	connectWire (no1, 32, 0) (a, 32, 32)
+	connectWire (no2, 16, 0) (b, 16, 0)
+	connectWire (no3, 16, 0) (b, 16, 16)
+	connectWire (no4, 32, 0) (b, 32, 32)
+	return o
