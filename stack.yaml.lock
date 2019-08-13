@@ -20,18 +20,18 @@ packages:
     commit: 4496879528fed8b78f26a822ec59e353aef7d4e3
 - completed:
     cabal-file:
-      size: 3155
-      sha256: 74de02aea373d1fb897711e41b4774701026b906fb4204e1b018bf492855cd5c
+      size: 3587
+      sha256: a142fb19529f62f56bdccd57ac8a609032921a1f7af81418fe83c49bcd4dedc7
     name: circuit-diagram-dsl
     version: 0.1.0.0
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
     pantry-tree:
-      size: 1296
-      sha256: 7730c852136a147de0c817a7fc9af6a3d36ad11ed9b1339ddc9b95a7e02ec0c1
-    commit: f8dfa386cbdd0b1b91ee34996fbaf8ddbc03236d
+      size: 1354
+      sha256: df95ebb8750bd3d677cf35d5d7917f494f810b2baba60f79a5781b696054f638
+    commit: e794ac36bf0b8cfac650abfcd8e9db56c8cf8a28
   original:
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
-    commit: f8dfa386cbdd0b1b91ee34996fbaf8ddbc03236d
+    commit: e794ac36bf0b8cfac650abfcd8e9db56c8cf8a28
 snapshots:
 - completed:
     size: 523443

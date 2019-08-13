@@ -36,3 +36,10 @@ sampleNandGate = (`runState` initCBState) $ do
 	(ni, no) <- notGate
 	connectWire64 ow ni
 	return no
+
+sampleNorGate :: (OWire, CBState)
+sampleNorGate = (`runState` initCBState) $ do
+	(_, _, ow) <- orGate
+	(ni, no) <- notGate
+	connectWire64 ow ni
+	return no
