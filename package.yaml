@@ -28,6 +28,7 @@ dependencies:
 - circuit-diagram-dsl
 - diagrams-lib
 - diagrams-svg
+- circuit-adornt-parts
 
 library:
   source-dirs: src

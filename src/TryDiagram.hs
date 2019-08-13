@@ -11,6 +11,7 @@ import Circuit.Adornt.Builder
 import Circuit.DiagramDsl
 
 import Circuit.Adornt.Diagram
+import Circuit.Adornt.Parts
 
 sampleNotGate :: (OWire, CBState)
 sampleNotGate = (`runState` initCBState) $ do
@@ -32,14 +33,10 @@ sampleAndGate = (`runState` initCBState) $ do
 
 sampleNandGate :: (OWire, CBState)
 sampleNandGate = (`runState` initCBState) $ do
-	(_, _, ow) <- andGate
-	(ni, no) <- notGate
-	connectWire64 ow ni
-	return no
+	(_, _, o) <- nandGate
+	return o
 
 sampleNorGate :: (OWire, CBState)
 sampleNorGate = (`runState` initCBState) $ do
-	(_, _, ow) <- orGate
-	(ni, no) <- notGate
-	connectWire64 ow ni
-	return no
+	(_, _, o) <- norGate
+	return o
