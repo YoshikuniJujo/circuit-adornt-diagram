@@ -41,7 +41,7 @@ packages:
 #
 extra-deps:
     - git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
-      commit: c365dc1defa918a884056e17166a54e32e718c5d
+      commit: 4496879528fed8b78f26a822ec59e353aef7d4e3
     - git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
       commit: 80747ae7dc3b977f7c51ab96f4bfebf6ff64be23
 

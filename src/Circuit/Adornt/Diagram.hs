@@ -39,6 +39,6 @@ sampleNotGate = (`runState` initCBState) $ do
 	(_, ow) <- notGate
 	(iw', ow') <- notGate
 	(iw'', ow'') <- notGate
-	connectWire (ow, 64, 0) (iw', 64, 0)
-	connectWire (ow', 64, 0) (iw'', 64, 0)
+	connectWire64 ow iw'
+	connectWire64 ow' iw''
 	return ow''
