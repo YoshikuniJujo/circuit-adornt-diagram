@@ -12,7 +12,10 @@ import qualified Data.ByteString.Char8 as BSC
 import Circuit.DiagramDsl
 import Circuit.Adornt.Builder
 
-newtype BG = BG BasicGate deriving Show
+data BG
+	= BG BasicGate
+	| BGLabel BasicGate Int
+	deriving Show
 
 instance ElementIdable BG where
 	elementIdGen (BG (AndGate iw1 iw2)) =
@@ -21,6 +24,7 @@ instance ElementIdable BG where
 		"OrGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
 	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
 	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
+	elementIdGen (BGLabel bg n) = "Label-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
 diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
@@ -59,23 +63,42 @@ diagramM _ _ _ = lift $ Left "not yet implemented 3"
 nextDiagramM :: CBState -> BasicGate -> [Pos] -> [IWire] -> DiagramMapM ()
 nextDiagramM cbs e [ip] [iw] = do
 	case cbsWireConn cbs !? iw of
-		Just [(o', _)] -> do
-			bg <- diagramM cbs (Just ip) [o']
-			connectLine (BG e) (BG bg)
+		Just [(o', fo)] -> do
+			ip' <- inputPosition
+				=<< newElement (BGLabel e 0)
+					(uncurry hLineTextD $ mkLabel fo) ip
+			bg <- diagramM cbs (Just ip') [o']
+			connectLine (BG e) (BGLabel e 0)
+			connectLine (BGLabel e 0) (BG bg)
 			return ()
 		Nothing -> return ()
 		_ -> lift $ Left "not yet implemented 4"
 nextDiagramM cbs e [ip1, ip2] [iw1, iw2] = do
 	case cbsWireConn cbs !? iw1 of
-		Just [(o', _)] -> do
-			bg <- diagramM cbs (Just ip1) [o']
-			connectLine1 (BG e) (BG bg)
+		Just [(o', fo)] -> do
+			ip' <- inputPosition
+				=<< newElement (BGLabel e 1)
+					(uncurry hLineTextD $ mkLabel fo) ip1
+			bg <- diagramM cbs (Just ip') [o']
+			connectLine1 (BG e) (BGLabel e 1)
+			connectLine (BGLabel e 1) (BG bg)
 		Nothing -> return ()
 		_ -> lift $ Left "not yet implemented 5"
 	case cbsWireConn cbs !? iw2 of
-		Just [(o', _)] -> do
-			bg <- diagramM cbs (Just ip2) [o']
-			connectLine2 (BG e) (BG bg)
+		Just [(o', fo)] -> do
+			ip' <- inputPosition
+				=<< newElement (BGLabel e 2)
+					(uncurry hLineTextD $ mkLabel fo) ip2
+			bg <- diagramM cbs (Just ip') [o']
+			connectLine2 (BG e) (BGLabel e 2)
+			connectLine (BGLabel e 2) (BG bg)
 		Nothing -> return ()
 		_ -> lift $ Left "not yet implemented 6"
 nextDiagramM _ _ _ _ = lift $ Left "Oops!!!!!!!!!!!!!!!!!!"
+
+mkLabel :: FromOWire -> (String, String)
+mkLabel ((lo, poso), (li, posi)) =
+	(show msbo ++ ":" ++ show lsbo, show msbi ++ ":" ++ show lsbi)
+	where
+	msbo = poso + lo - 1; lsbo = poso
+	msbi = posi + li - 1; lsbi = posi
