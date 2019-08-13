@@ -21,8 +21,13 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- monads-tf
+- containers
+- bytestring
 - circuit-adornt-build
 - circuit-diagram-dsl
+- diagrams-lib
+- diagrams-svg
 
 library:
   source-dirs: src
