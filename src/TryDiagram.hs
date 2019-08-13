@@ -45,3 +45,13 @@ sampleXorGate :: (OWire, CBState)
 sampleXorGate = (`runState` initCBState) $ do
 	(_, _, o) <- xorGate
 	return o
+
+sampleAndNotBGate :: (OWire, CBState)
+sampleAndNotBGate = (`runState` initCBState) $ do
+	(_, _, o) <- andNotBGate
+	return o
+
+sampleOrNotBGate :: (OWire, CBState)
+sampleOrNotBGate = (`runState` initCBState) $ do
+	(_, _, o) <- orNotBGate
+	return o
