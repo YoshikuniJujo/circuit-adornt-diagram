@@ -55,3 +55,12 @@ sampleOrNotBGate :: (OWire, CBState)
 sampleOrNotBGate = (`runState` initCBState) $ do
 	(_, _, o) <- orNotBGate
 	return o
+
+sample2 :: (OWire, CBState)
+sample2 = (`runState` initCBState) $ do
+	(_, no) <- notGate
+	(a, _, o) <- andGate
+	(ni', no') <- notGate
+	connectWire64 no a
+	connectWire64 o ni'
+	return no'
