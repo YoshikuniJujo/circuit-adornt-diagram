@@ -19,6 +19,7 @@ data BG
 	| BGTri OWire
 	| BGLabelTri OWire
 	| BGBranchTri OWire
+	| BGDelay IWire
 	deriving Show
 
 instance ElementIdable BG where
@@ -33,6 +34,7 @@ instance ElementIdable BG where
 	elementIdGen (BGTri ow) = "TriGate-" <> BSC.pack (show ow)
 	elementIdGen (BGLabelTri ow) = "LabelTri-" <> BSC.pack (show ow)
 	elementIdGen (BGBranchTri ow) = "BranchTri-" <> BSC.pack (show ow)
+	elementIdGen (BGDelay iw) = "Delay-" <> BSC.pack (show iw)
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
 diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BG
@@ -46,8 +48,15 @@ diagramM cbs mpos [o@(OWire _ (Just iw))] = do
 			ip1 <- inputPosition1 lp
 			case cbsWireConn cbs !? iw of
 				Just ofos -> do
-					bg' <- nextDiagramTriMList cbs o ip1 ofos
-					connectLine1 (BGTri o) bg'
+					mdps <- checkDelay cbs ip1 iw
+					case mdps of
+						Just dps -> do
+							bg' <- nextDiagramTriMList cbs o dps ofos
+							connectLine1 (BGTri o) (BGDelay iw)
+							connectLine (BGDelay iw) bg'
+						Nothing -> do
+							bg' <- nextDiagramTriMList cbs o ip1 ofos
+							connectLine1 (BGTri o) bg'
 				Nothing -> return ()
 			ip2 <- inputPosition2 lp
 			bg <- diagramMGen cbs (Just ip2) [o]
@@ -114,25 +123,53 @@ diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 	_ -> lift $ Left "not yet implemented 2"
 diagramMGen _ _ _ = lift $ Left "not yet implemented 3"
 
+checkDelay :: CBState -> Pos -> IWire -> DiagramMapM (Maybe Pos)
+checkDelay cbs ip iw = case cbsDelay cbs !? iw of
+		Just d -> Just <$> (inputPosition =<< newElement (BGDelay iw) (delayD d) ip)
+		Nothing -> return Nothing
+
 nextDiagramM :: CBState -> BasicGate -> [Pos] -> [IWire] -> DiagramMapM ()
 nextDiagramM cbs e [ip] [iw] = do
 	case cbsWireConn cbs !? iw of
 		Just ofos -> do
-			(_, nbg) <- nextDiagramMList cbs e ip ofos 0
-			connectLine (BG e) nbg
+			mdps <- checkDelay cbs ip iw
+			case mdps of
+				Just dps -> do
+					(_, nbg) <- nextDiagramMList cbs e dps ofos 0
+					connectLine (BG e) (BGDelay iw)
+					connectLine (BGDelay iw) nbg
+				Nothing -> do
+					(_, nbg) <- nextDiagramMList cbs e ip ofos 0
+					connectLine (BG e) nbg
 		Nothing -> return ()
 nextDiagramM cbs e [ip1, ip2] [iw1, iw2] = do
 	n <- case cbsWireConn cbs !? iw1 of
 		Just ofos -> do
-			(n, nbg) <- nextDiagramMList cbs e ip1 ofos 1
-			connectLine1 (BG e) nbg
-			return n
+			mdps <- checkDelay cbs ip1 iw1
+			case mdps of
+				Just dps -> do
+					(n, nbg) <- nextDiagramMList cbs e dps ofos 1
+					connectLine1 (BG e) (BGDelay iw1)
+					connectLine (BGDelay iw1) nbg
+					return n
+				Nothing -> do
+					(n, nbg) <- nextDiagramMList cbs e ip1 ofos 1
+					connectLine1 (BG e) nbg
+					return n
 		Nothing -> return 1
 	case cbsWireConn cbs !? iw2 of
 		Just ofos -> do
-			(_, nbg) <- nextDiagramMList cbs e ip2 ofos n
-			connectLine2 (BG e) nbg
-			return ()
+			mdps <- checkDelay cbs ip2 iw2
+			case mdps of
+				Just dps -> do
+					(_, nbg) <- nextDiagramMList cbs e dps ofos n
+					connectLine2 (BG e) (BGDelay iw2)
+					connectLine (BGDelay iw2) nbg
+					return ()
+				Nothing -> do
+					(_, nbg) <- nextDiagramMList cbs e ip2 ofos n
+					connectLine2 (BG e) nbg
+					return ()
 		Nothing -> return ()
 nextDiagramM _ _ _ _ = lift $ Left "Oops!!!!!!!!!!!!!!!!!!"
 
