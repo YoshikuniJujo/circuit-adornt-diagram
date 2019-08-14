@@ -137,3 +137,9 @@ sampleMultipleXor = (`runState` initCBState) $ snd <$> multiple xorGate 43
 
 sampleDecoder :: ([OWire], CBState)
 sampleDecoder = (`runState` initCBState) $ snd <$> decoder 8
+
+sampleMux4 :: ([OWire], CBState)
+sampleMux4 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
+
+sampleMux13 :: ([OWire], CBState)
+sampleMux13 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
