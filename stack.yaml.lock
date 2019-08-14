@@ -27,25 +27,25 @@ packages:
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
     pantry-tree:
       size: 1527
-      sha256: f3da8fba9dc5e24b4c68a86568b2758828ba2b428ec9a8e6fbd42f342d87cd0c
-    commit: c762560ccf8f4c46f9ea0a200d37850a844ef60c
+      sha256: ac614d7ab3b47bab8a7d33eab4a3dfa0ef2795880a8e8af9d2fae97bd14ba054
+    commit: 940642ee49d70b9d5a393e3ee8350a6c6e0c6c44
   original:
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
-    commit: c762560ccf8f4c46f9ea0a200d37850a844ef60c
+    commit: 940642ee49d70b9d5a393e3ee8350a6c6e0c6c44
 - completed:
     cabal-file:
-      size: 1431
-      sha256: 0502041cd22edff5f04746120e6afa587b027435a794326387832071b5861833
+      size: 1443
+      sha256: 5a48e163fe7830df0bc74536528382ba19f87e96f8c0af22b43d4e735af16569
     name: circuit-adornt-parts
     version: 0.1.0.0
     git: https://github.com/YoshikuniJujo/circuit-adornt-parts.git
     pantry-tree:
-      size: 522
-      sha256: e13741d3ed80bcd6e09d731820c5015e44168e1eddd575d14eade262672a50e5
-    commit: 4c5912ea344e02ce8f3f1304638e9b4bf41f4fde
+      size: 574
+      sha256: 4be7cb30cd0d8f8158f82783ab509e7a1ed9bbb3869390b1b1b9cfed83474158
+    commit: 41638e1a48d963d1e34a59d479b4b3c0e06a0164
   original:
     git: https://github.com/YoshikuniJujo/circuit-adornt-parts.git
-    commit: 4c5912ea344e02ce8f3f1304638e9b4bf41f4fde
+    commit: 41638e1a48d963d1e34a59d479b4b3c0e06a0164
 snapshots:
 - completed:
     size: 523443

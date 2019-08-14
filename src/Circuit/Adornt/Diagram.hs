@@ -39,9 +39,12 @@ instance ElementIdable BG where
 	elementIdGen (BGDelay iw) = "Delay-" <> BSC.pack (show iw)
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
-diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BG
-diagramM cbs mpos [o@(OWire _ Nothing)] =diagramMGen cbs mpos [o]
-diagramM cbs mpos [o@(OWire _ (Just iw))] = do
+diagramM :: CBState -> [OWire] -> DiagramMapM ()
+diagramM cbs = mapM_ (diagramM1 cbs Nothing)
+
+diagramM1 :: CBState -> Maybe Pos -> OWire -> DiagramMapM BG
+diagramM1 cbs mpos o@(OWire _ Nothing) =diagramMGen cbs mpos [o]
+diagramM1 cbs mpos o@(OWire _ (Just iw)) = do
 	mlp <- case mpos of
 		Nothing -> putElement0 (BGTri o) (triGateD "0:0" "63:0")
 		Just pos -> putElement (BGTri o) (triGateD "0:0" "63:0") pos
@@ -65,7 +68,6 @@ diagramM cbs mpos [o@(OWire _ (Just iw))] = do
 			connectLine2 (BGTri o) bg
 			return (BGTri o)
 		Nothing -> lift $ Left "diagramM: yet"
-diagramM _ _ _ = lift $ Left "diagramM: not yet implemented"
 
 nextDiagramTriMList ::
 	CBState -> OWire -> Pos -> [(OWire, FromOWire)] -> DiagramMapM BG
@@ -88,7 +90,7 @@ nextDiagramTriM1 ::
 nextDiagramTriM1 cbs e ip (o', fo) = do
 	ip' <- inputPosition
 		=<< newElement (BGLabelTri e) (uncurry hLineTextD $ mkLabel fo) ip
-	bg <- diagramM cbs (Just ip') [o']
+	bg <- diagramM1 cbs (Just ip') o'
 	connectLine (BGLabelTri e) bg
 	return $ BGLabelTri e
 
@@ -204,7 +206,7 @@ nextDiagramM1 :: CBState ->
 nextDiagramM1 cbs e ip (o', fo) n = do
 	ip' <- inputPosition
 		=<< newElement (BGLabel e n) (uncurry hLineTextD $ mkLabel fo) ip
-	bg <- diagramM cbs (Just ip') [o']
+	bg <- diagramM1 cbs (Just ip') o'
 	connectLine (BGLabel e n) bg
 	return $ BGLabel e n
 

@@ -133,4 +133,7 @@ sampleMultipleOr :: (OWire, CBState)
 sampleMultipleOr = (`runState` initCBState) $ snd <$> multiple orGate 31
 
 sampleMultipleXor :: (OWire, CBState)
-sampleMultipleXor = (`runState` initCBState) $ snd <$> multiple xorGate 37
+sampleMultipleXor = (`runState` initCBState) $ snd <$> multiple xorGate 43
+
+sampleDecoder :: ([OWire], CBState)
+sampleDecoder = (`runState` initCBState) $ snd <$> decoder 8
