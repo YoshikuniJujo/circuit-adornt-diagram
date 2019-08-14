@@ -125,3 +125,12 @@ sampleDelayTriGate = (`runState` initCBState) $ do
 
 sampleConstGate :: (OWire, CBState)
 sampleConstGate = (`runState` initCBState) $ constGate 0xf0f0f0f0f0f0f0f0
+
+sampleMultipleAnd :: (OWire, CBState)
+sampleMultipleAnd = (`runState` initCBState) $ snd <$> multiple andGate 25
+
+sampleMultipleOr :: (OWire, CBState)
+sampleMultipleOr = (`runState` initCBState) $ snd <$> multiple orGate 31
+
+sampleMultipleXor :: (OWire, CBState)
+sampleMultipleXor = (`runState` initCBState) $ snd <$> multiple xorGate 37

@@ -43,9 +43,9 @@ extra-deps:
     - git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
       commit: 4496879528fed8b78f26a822ec59e353aef7d4e3
     - git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
-      commit: 5c23cb64e43b62e73e1d096923135c0b47c570eb
+      commit: c762560ccf8f4c46f9ea0a200d37850a844ef60c
     - git: https://github.com/YoshikuniJujo/circuit-adornt-parts.git
-      commit: a25ae71485d6dfca7bc354fc60bc739636550b9c
+      commit: 4c5912ea344e02ce8f3f1304638e9b4bf41f4fde
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
