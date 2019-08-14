@@ -14,6 +14,7 @@ import Circuit.Adornt.Builder
 
 data BG
 	= BG BasicGate
+	| BGConst OWire
 	| BGLabel BasicGate Int
 	| BGBranch BasicGate Int
 	| BGTri OWire
@@ -29,6 +30,7 @@ instance ElementIdable BG where
 		"OrGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
 	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
 	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
+	elementIdGen (BGConst ow) = "ConstGate-" <> BSC.pack (show ow)
 	elementIdGen (BGLabel bg n) = "Label-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
 	elementIdGen (BGBranch bg n) = "Branch-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
 	elementIdGen (BGTri ow) = "TriGate-" <> BSC.pack (show ow)
@@ -38,7 +40,7 @@ instance ElementIdable BG where
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
 diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BG
-diagramM cbs mpos [o@(OWire _ Nothing)] = BG <$> diagramMGen cbs mpos [o]
+diagramM cbs mpos [o@(OWire _ Nothing)] =diagramMGen cbs mpos [o]
 diagramM cbs mpos [o@(OWire _ (Just iw))] = do
 	mlp <- case mpos of
 		Nothing -> putElement0 (BGTri o) (triGateD "0:0" "63:0")
@@ -60,7 +62,7 @@ diagramM cbs mpos [o@(OWire _ (Just iw))] = do
 				Nothing -> return ()
 			ip2 <- inputPosition2 lp
 			bg <- diagramMGen cbs (Just ip2) [o]
-			connectLine2 (BGTri o) (BG bg)
+			connectLine2 (BGTri o) bg
 			return (BGTri o)
 		Nothing -> lift $ Left "diagramM: yet"
 diagramM _ _ _ = lift $ Left "diagramM: not yet implemented"
@@ -90,7 +92,7 @@ nextDiagramTriM1 cbs e ip (o', fo) = do
 	connectLine (BGLabelTri e) bg
 	return $ BGLabelTri e
 
-diagramMGen :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
+diagramMGen :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BG
 diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 	Just e -> do
 		mipsiws <- case e of 
@@ -117,9 +119,16 @@ diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 					Just ps -> putElement (BG e) hLineD ps
 				mip' <- maybe (return Nothing) ((Just <$>) . inputPosition) mlp
 				return $ (, [iw']) . (: []) <$> mip'
-			bg -> lift . Left $ "diagramM " ++ show bg
+			ConstGate c -> do
+				mlp <- case mpos of
+					Nothing -> putElement0 (BGConst o) (constGateD c)
+					Just ps -> putElement (BGConst o) (constGateD c) ps
+				maybe (return Nothing) (const $ return (Just ([], []))) mlp
+--			bg -> lift . Left $ "diagramM " ++ show bg
 		maybe (return ()) (uncurry $ nextDiagramM cbs e) mipsiws
-		return e
+		return $ case mipsiws of
+			Just ([], []) -> BGConst o
+			_ -> BG e
 	_ -> lift $ Left "not yet implemented 2"
 diagramMGen _ _ _ = lift $ Left "not yet implemented 3"
 
@@ -171,6 +180,7 @@ nextDiagramM cbs e [ip1, ip2] [iw1, iw2] = do
 					connectLine2 (BG e) nbg
 					return ()
 		Nothing -> return ()
+nextDiagramM _ _ [] [] = return ()
 nextDiagramM _ _ _ _ = lift $ Left "Oops!!!!!!!!!!!!!!!!!!"
 
 nextDiagramMList :: CBState ->

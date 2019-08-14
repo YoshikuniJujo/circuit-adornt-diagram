@@ -116,9 +116,12 @@ sampleDelayTriGate :: (OWire, CBState)
 sampleDelayTriGate = (`runState` initCBState) $ do
 	(_ni, no) <- notGate
 	(_a, _b, o) <- andGate
-	(ta, tb, to) <- triGate
+	(ta, tb, tout) <- triGate
 	connectWire64 no ta
 	delay ta 55
 	connectWire64 o tb
 	delay tb 99
-	return to
+	return tout
+
+sampleConstGate :: (OWire, CBState)
+sampleConstGate = (`runState` initCBState) $ constGate 0xf0f0f0f0f0f0f0f0
