@@ -16,6 +16,9 @@ data BG
 	= BG BasicGate
 	| BGLabel BasicGate Int
 	| BGBranch BasicGate Int
+	| BGTri OWire
+	| BGLabelTri OWire
+	| BGBranchTri OWire
 	deriving Show
 
 instance ElementIdable BG where
@@ -27,10 +30,59 @@ instance ElementIdable BG where
 	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
 	elementIdGen (BGLabel bg n) = "Label-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
 	elementIdGen (BGBranch bg n) = "Branch-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
+	elementIdGen (BGTri ow) = "TriGate-" <> BSC.pack (show ow)
+	elementIdGen (BGLabelTri ow) = "LabelTri-" <> BSC.pack (show ow)
+	elementIdGen (BGBranchTri ow) = "BranchTri-" <> BSC.pack (show ow)
 	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
 
-diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
-diagramM cbs mpos [o] = case cbsGate cbs  !? o of
+diagramM :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BG
+diagramM cbs mpos [o@(OWire _ Nothing)] = BG <$> diagramMGen cbs mpos [o]
+diagramM cbs mpos [o@(OWire _ (Just iw))] = do
+	mlp <- case mpos of
+		Nothing -> putElement0 (BGTri o) (triGateD "0:0" "63:0")
+		Just pos -> putElement (BGTri o) (triGateD "0:0" "63:0") pos
+	case mlp of
+		Just lp -> do
+			ip1 <- inputPosition1 lp
+			case cbsWireConn cbs !? iw of
+				Just ofos -> do
+					bg' <- nextDiagramTriMList cbs o ip1 ofos
+					connectLine1 (BGTri o) bg'
+				Nothing -> return ()
+			ip2 <- inputPosition2 lp
+			bg <- diagramMGen cbs (Just ip2) [o]
+			connectLine2 (BGTri o) (BG bg)
+			return (BGTri o)
+		Nothing -> lift $ Left "diagramM: yet"
+diagramM _ _ _ = lift $ Left "diagramM: not yet implemented"
+
+nextDiagramTriMList ::
+	CBState -> OWire -> Pos -> [(OWire, FromOWire)] -> DiagramMapM BG
+nextDiagramTriMList _ _ _ [] = lift $ Left "nextDiagramMList: shouldn't take null"
+nextDiagramTriMList cbs e ip [ofo] = do
+	nbg <- nextDiagramTriM1 cbs e ip ofo
+	return nbg
+nextDiagramTriMList cbs e ip (ofo : ofos) = do
+	lp <- newElement (BGBranchTri e) branchD ip
+	ip1 <- inputPosition1 lp
+	ip2 <- inputPosition2 lp
+	nbg <- nextDiagramTriM1 cbs e ip1 ofo
+	connectLine1 (BGBranchTri e) nbg
+	nbg' <- nextDiagramTriMList cbs e ip2 ofos
+	connectLine2 (BGBranchTri e) nbg'
+	return (BGBranchTri e)
+
+nextDiagramTriM1 ::
+	CBState -> OWire -> Pos -> (OWire, FromOWire) -> DiagramMapM BG
+nextDiagramTriM1 cbs e ip (o', fo) = do
+	ip' <- inputPosition
+		=<< newElement (BGLabelTri e) (uncurry hLineTextD $ mkLabel fo) ip
+	bg <- diagramM cbs (Just ip') [o']
+	connectLine (BGLabelTri e) bg
+	return $ BGLabelTri e
+
+diagramMGen :: CBState -> Maybe Pos -> [OWire] -> DiagramMapM BasicGate
+diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 	Just e -> do
 		mipsiws <- case e of 
 			AndGate iw1 iw2 -> do
@@ -60,7 +112,7 @@ diagramM cbs mpos [o] = case cbsGate cbs  !? o of
 		maybe (return ()) (uncurry $ nextDiagramM cbs e) mipsiws
 		return e
 	_ -> lift $ Left "not yet implemented 2"
-diagramM _ _ _ = lift $ Left "not yet implemented 3"
+diagramMGen _ _ _ = lift $ Left "not yet implemented 3"
 
 nextDiagramM :: CBState -> BasicGate -> [Pos] -> [IWire] -> DiagramMapM ()
 nextDiagramM cbs e [ip] [iw] = do
@@ -106,7 +158,7 @@ nextDiagramM1 cbs e ip (o', fo) n = do
 	ip' <- inputPosition
 		=<< newElement (BGLabel e n) (uncurry hLineTextD $ mkLabel fo) ip
 	bg <- diagramM cbs (Just ip') [o']
-	connectLine (BGLabel e n) (BG bg)
+	connectLine (BGLabel e n) bg
 	return $ BGLabel e n
 
 mkLabel :: FromOWire -> (String, String)

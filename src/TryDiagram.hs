@@ -88,3 +88,12 @@ sampleBranch2 = (`runState` initCBState) $ do
 	connectWire (no3, 16, 0) (b, 16, 16)
 	connectWire (no4, 32, 0) (b, 32, 32)
 	return o
+
+sampleTriGate :: (OWire, CBState)
+sampleTriGate = (`runState` initCBState) $ do
+	(a, b, o) <- triGate
+	(_ni, no) <- notGate
+	(_a', _b', o') <- andGate
+	connectWire64 no a
+	connectWire64 o' b
+	return o
