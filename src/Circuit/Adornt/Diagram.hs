@@ -111,10 +111,12 @@ diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 						Just ps -> putElement (BG e) orGateD ps
 				return $ Just ([ip1, ip2], [iw1, iw2])
 			NotGate iw' -> do
-				ip' <- inputPosition =<< lift . maybe (Left "Oops3") Right =<< case mpos of
+				mip' <- maybe (return Nothing) ((Just <$>) . inputPosition) =<< case mpos of
 					Nothing -> putElement0 (BG e) notGateD
 					Just ps -> putElement (BG e) notGateD ps
-				return $ Just ([ip'], [iw'])
+				return $ case mip' of
+					Just ip' -> Just ([ip'], [iw'])
+					Nothing -> Nothing
 			IdGate iw' -> do
 				mlp <- case mpos of
 					Nothing -> putElement0 (BG e) hLineD

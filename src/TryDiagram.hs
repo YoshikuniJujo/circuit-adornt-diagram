@@ -143,3 +143,12 @@ sampleMux4 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
 
 sampleMux13 :: ([OWire], CBState)
 sampleMux13 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
+
+sampleSrlatch :: ([OWire], CBState)
+sampleSrlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> srlatch
+
+sampleDlatch :: ([OWire], CBState)
+sampleDlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
+
+sampleDflipflop :: ([OWire], CBState)
+sampleDflipflop = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
