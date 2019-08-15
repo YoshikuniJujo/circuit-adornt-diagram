@@ -4,6 +4,7 @@
 module TryDiagram where
 
 import Control.Monad.State
+import Data.Word
 import Diagrams.Prelude
 import Diagrams.Backend.SVG
 
@@ -12,6 +13,8 @@ import Circuit.DiagramDsl
 
 import Circuit.Adornt.Diagram
 import Circuit.Adornt.Parts
+
+import CarryLookahead2
 
 sampleNotGate :: (OWire, CBState)
 sampleNotGate = (`runState` initCBState) $ do
@@ -145,16 +148,23 @@ sampleMux13 :: ([OWire], CBState)
 sampleMux13 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
 
 sampleSrlatch :: ([OWire], CBState)
-sampleSrlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> srlatch
+sampleSrlatch = (`runState` initCBState)
+	$ (\(_, _, q, q_) -> [q, q_]) <$> srlatch
 
 sampleDlatch :: ([OWire], CBState)
 sampleDlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
 
 sampleDflipflop :: ([OWire], CBState)
-sampleDflipflop = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
+sampleDflipflop = (`runState` initCBState)
+	$ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
 
 samplePla8 :: ([OWire], CBState)
-samplePla8 = (`runState` initCBState) $ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
+samplePla8 = (`runState` initCBState)
+	$ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
 
 sampleZeroDetector :: ([OWire], CBState)
 sampleZeroDetector = (`runState` initCBState) $ (: []) . snd <$> zeroDetector
+
+sampleCarryLookahead :: Word8 -> ([OWire], CBState)
+sampleCarryLookahead n = (`runState` initCBState)
+	$ (\(_, _, _, cs, c) -> [cs, c]) <$> carriesN n

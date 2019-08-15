@@ -99,17 +99,21 @@ diagramMGen cbs mpos [o] = case cbsGate cbs  !? o of
 	Just e -> do
 		mipsiws <- case e of 
 			AndGate iw1 iw2 -> do
-				(ip1, ip2) <- (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2)
-					=<< lift . maybe (Left "Oops2") Right =<< case mpos of
+				mips <- maybe (return Nothing) ((Just <$>) . (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2))
+					=<< case mpos of
 						Nothing -> putElement0 (BG e) andGateD
 						Just ps -> putElement (BG e) andGateD ps
-				return $ Just ([ip1, ip2], [iw1, iw2])
+				return $ case mips of
+					Just (ip1, ip2) -> Just ([ip1, ip2], [iw1, iw2])
+					Nothing -> Nothing
 			OrGate iw1 iw2 -> do
-				(ip1, ip2) <- (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2)
-					=<< lift . maybe (Left "Oops2") Right =<< case mpos of
+				mips <- maybe (return Nothing) ((Just <$>) . (\(m1, m2) -> (,) <$> m1 <*> m2) . (inputPosition1 &&& inputPosition2))
+					=<< case mpos of
 						Nothing -> putElement0 (BG e) orGateD
 						Just ps -> putElement (BG e) orGateD ps
-				return $ Just ([ip1, ip2], [iw1, iw2])
+				return $ case mips of
+					Just (ip1, ip2) -> Just ([ip1, ip2], [iw1, iw2])
+					Nothing -> Nothing
 			NotGate iw' -> do
 				mip' <- maybe (return Nothing) ((Just <$>) . inputPosition) =<< case mpos of
 					Nothing -> putElement0 (BG e) notGateD
