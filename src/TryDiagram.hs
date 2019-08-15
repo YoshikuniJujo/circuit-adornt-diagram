@@ -152,3 +152,6 @@ sampleDlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
 
 sampleDflipflop :: ([OWire], CBState)
 sampleDflipflop = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
+
+samplePla8 :: ([OWire], CBState)
+samplePla8 = (`runState` initCBState) $ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
