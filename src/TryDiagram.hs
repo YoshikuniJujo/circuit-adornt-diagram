@@ -155,3 +155,6 @@ sampleDflipflop = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dfl
 
 samplePla8 :: ([OWire], CBState)
 samplePla8 = (`runState` initCBState) $ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
+
+sampleZeroDetector :: ([OWire], CBState)
+sampleZeroDetector = (`runState` initCBState) $ (: []) . snd <$> zeroDetector
