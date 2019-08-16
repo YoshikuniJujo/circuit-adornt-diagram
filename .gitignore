@@ -3,3 +3,4 @@ circuit-adornt-diagram.cabal
 *~
 *.svg
 .*.swp
+.html/
