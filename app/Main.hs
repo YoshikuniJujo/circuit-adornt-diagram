@@ -13,10 +13,22 @@ import TryDiagram
 
 main :: IO ()
 main = do
-	n_ : s_ : fp : _ <- getArgs
-	let	n = read n_
-		s = read s_
-	if n `elem` [1, 2, 4, 8, 16, 32, 64] then do
-		let	(ows, ng) = sampleCarryLookahead n
-		either error (renderSVG fp (mkWidth s) . drawDiagram) $ (`execDiagramMapM` 4) $ diagramM ng ows
-	else putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"
+	fp : s_ : sp_ : sl : args <- getArgs
+	let	s = read s_
+		sp = read sp_
+	let	mowsng = case sl of
+			"pla" -> Just . fst $ samplePla8
+			"carry_lookahead" -> let
+				n_ : _ = args
+				n = read n_ in
+				if n `elem` [1, 2, 4, 8, 16, 32, 64] then
+					Just . fst $ sampleCarryLookahead n
+				else Nothing
+			_ -> Nothing
+	case mowsng of
+		Just (ows, ng) ->
+			either error (renderSVG fp (mkWidth s) . drawDiagram)
+				$ (`execDiagramMapM` sp) $ diagramM ng ows
+		Nothing -> do
+			putStrLn "sl = pla of carry_lookahead"
+			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"

@@ -24,10 +24,11 @@ dependencies:
 - monads-tf
 - containers
 - bytestring
-- circuit-adornt-build
-- circuit-diagram-dsl
+- filepath
 - diagrams-lib
 - diagrams-svg
+- circuit-adornt-build
+- circuit-diagram-dsl
 - circuit-adornt-parts
 
 library:

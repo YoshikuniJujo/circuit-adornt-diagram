@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TupleSections #-}
 {-# OPTIONS_GHC -Wall -fno-warn-tabs -fno-warn-unused-imports #-}
 
 module TryDiagram where
 
 import Control.Monad.State
 import Data.Word
+import System.FilePath
 import Diagrams.Prelude
 import Diagrams.Backend.SVG
 
@@ -16,69 +17,76 @@ import Circuit.Adornt.Parts
 
 import CarryLookahead2
 
-sampleNotGate :: (OWire, CBState)
-sampleNotGate = (`runState` initCBState) $ do
+type Sample = (([OWire], CBState), (Double, FilePath))
+
+trySample :: Sample -> IO ()
+trySample ((ows, cbs), (s, fp)) =
+	either error (renderSVG ("results_old" </> fp) (mkWidth s) . drawDiagram)
+		$ (`execDiagramMapM` 4) $ diagramM cbs ows
+
+sampleNotGate :: Sample
+sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do
 	(_, ow) <- notGate
 	(iw', ow') <- notGate
 	(iw'', ow'') <- notGate
 	connectWire64 ow iw'
 	connectWire64 ow' iw''
-	return ow''
+	return [ow'']
 
-sampleAndGate :: (OWire, CBState)
-sampleAndGate = (`runState` initCBState) $ do
+sampleAndGate :: Sample
+sampleAndGate = (, (950, "andGate.svg")) . (`runState` initCBState) $ do
 	(_, _, ow) <- andGate
 	(_, _, ow') <- andGate
 	(iw1'', iw2'', ow'') <- andGate
 	connectWire64 ow iw1''
 	connectWire64 ow' iw2''
-	return ow''
+	return [ow'']
 
-sampleNandGate :: (OWire, CBState)
-sampleNandGate = (`runState` initCBState) $ do
+sampleNandGate :: Sample
+sampleNandGate = (, (950, "nandGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- nandGate
-	return o
+	return [o]
 
-sampleNorGate :: (OWire, CBState)
-sampleNorGate = (`runState` initCBState) $ do
+sampleNorGate :: Sample
+sampleNorGate = (, (950, "norGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- norGate
-	return o
+	return [o]
 
-sampleXorGate :: (OWire, CBState)
-sampleXorGate = (`runState` initCBState) $ do
+sampleXorGate :: Sample
+sampleXorGate = (, (950, "xorGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- xorGate
-	return o
+	return [o]
 
-sampleAndNotBGate :: (OWire, CBState)
-sampleAndNotBGate = (`runState` initCBState) $ do
+sampleAndNotBGate :: Sample
+sampleAndNotBGate = (, (950, "andNotBGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- andNotBGate
-	return o
+	return [o]
 
-sampleOrNotBGate :: (OWire, CBState)
-sampleOrNotBGate = (`runState` initCBState) $ do
+sampleOrNotBGate :: Sample
+sampleOrNotBGate = (, (950, "orNotBGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- orNotBGate
-	return o
+	return [o]
 
-sample2 :: (OWire, CBState)
-sample2 = (`runState` initCBState) $ do
+sample2 :: Sample
+sample2 = (, (950, "sample2.svg")) . (`runState` initCBState) $ do
 	(_, no) <- notGate
 	(a, _, o) <- andGate
 	(ni', no') <- notGate
 	connectWire64 no a
 	connectWire64 o ni'
-	return no'
+	return [no']
 
-sampleBranch :: (OWire, CBState)
-sampleBranch = (`runState` initCBState) $ do
+sampleBranch :: Sample
+sampleBranch = (, (950, "branch.svg")) . (`runState` initCBState) $ do
 	(_ni, no) <- notGate
 	(_ni', no') <- notGate
 	(ni'', no'') <- notGate
 	connectWire (no, 32, 0) (ni'', 32, 32)
 	connectWire (no', 32, 0) (ni'', 32, 0)
-	return no''
+	return [no'']
 
-sampleBranch2 :: (OWire, CBState)
-sampleBranch2 = (`runState` initCBState) $ do
+sampleBranch2 :: Sample
+sampleBranch2 = (, (950, "branch2.svg")) . (`runState` initCBState) $ do
 	(a, b, o) <- andGate
 	(_ni0, no0) <- notGate
 	(_ni1, no1) <- notGate
@@ -90,10 +98,10 @@ sampleBranch2 = (`runState` initCBState) $ do
 	connectWire (no2, 16, 0) (b, 16, 0)
 	connectWire (no3, 16, 0) (b, 16, 16)
 	connectWire (no4, 32, 0) (b, 32, 32)
-	return o
+	return [o]
 
-sampleTriGate :: ([OWire], CBState)
-sampleTriGate = (`runState` initCBState) $ do
+sampleTriGate :: Sample
+sampleTriGate = (, (950, "triGate.svg")) . (`runState` initCBState) $ do
 	(_a1, _b1, o1) <- triGate
 	(_a2, _b2, o2) <- triGate
 	(oin, oout) <- idGate
@@ -101,8 +109,8 @@ sampleTriGate = (`runState` initCBState) $ do
 	connectWire64 o2 oin
 	return [oout]
 
-sampleDelayGate :: (OWire, CBState)
-sampleDelayGate = (`runState` initCBState) $ do
+sampleDelayGate :: Sample
+sampleDelayGate = (, (950, "delayGate.svg")) . (`runState` initCBState) $ do
 	(_ni0, no0) <- notGate
 	(_ni1, no1) <- notGate
 	(a, b, o) <- andGate
@@ -113,10 +121,10 @@ sampleDelayGate = (`runState` initCBState) $ do
 	delay a 123
 	connectWire64 no1 b
 	delay b 5
-	return no
+	return [no]
 
-sampleDelayTriGate :: (OWire, CBState)
-sampleDelayTriGate = (`runState` initCBState) $ do
+sampleDelayTriGate :: Sample
+sampleDelayTriGate = (, (950, "delayTriGate.svg")) . (`runState` initCBState) $ do
 	(_ni, no) <- notGate
 	(_a, _b, o) <- andGate
 	(ta, tb, tout) <- triGate
@@ -124,47 +132,47 @@ sampleDelayTriGate = (`runState` initCBState) $ do
 	delay ta 55
 	connectWire64 o tb
 	delay tb 99
-	return tout
+	return [tout]
 
-sampleConstGate :: (OWire, CBState)
-sampleConstGate = (`runState` initCBState) $ constGate 0xf0f0f0f0f0f0f0f0
+sampleConstGate :: Sample
+sampleConstGate = (, (950, "constGate.svg")) . (`runState` initCBState) $ (: []) <$> constGate 0xf0f0f0f0f0f0f0f0
 
-sampleMultipleAnd :: (OWire, CBState)
-sampleMultipleAnd = (`runState` initCBState) $ snd <$> multiple andGate 25
+sampleMultipleAnd :: Sample
+sampleMultipleAnd = (, (950, "multipleAnd.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple andGate 25
 
-sampleMultipleOr :: (OWire, CBState)
-sampleMultipleOr = (`runState` initCBState) $ snd <$> multiple orGate 31
+sampleMultipleOr :: Sample
+sampleMultipleOr = (, (950, "multipleOr.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple orGate 31
 
-sampleMultipleXor :: (OWire, CBState)
-sampleMultipleXor = (`runState` initCBState) $ snd <$> multiple xorGate 43
+sampleMultipleXor :: Sample
+sampleMultipleXor = (, (950, "multipleXor.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple xorGate 43
 
-sampleDecoder :: ([OWire], CBState)
-sampleDecoder = (`runState` initCBState) $ snd <$> decoder 8
+sampleDecoder :: Sample
+sampleDecoder = (, (950, "decodre.svg")) . (`runState` initCBState) $ snd <$> decoder 8
 
-sampleMux4 :: ([OWire], CBState)
-sampleMux4 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
+sampleMux4 :: Sample
+sampleMux4 = (, (950, "mux4.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
 
-sampleMux13 :: ([OWire], CBState)
-sampleMux13 = (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
+sampleMux13 :: Sample
+sampleMux13 = (, (950, "mux13.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
 
-sampleSrlatch :: ([OWire], CBState)
-sampleSrlatch = (`runState` initCBState)
+sampleSrlatch :: Sample
+sampleSrlatch = (, (950, "srlatch.svg")) . (`runState` initCBState)
 	$ (\(_, _, q, q_) -> [q, q_]) <$> srlatch
 
-sampleDlatch :: ([OWire], CBState)
-sampleDlatch = (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
+sampleDlatch :: Sample
+sampleDlatch = (, (950, "dlatch.svg")) . (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
 
-sampleDflipflop :: ([OWire], CBState)
-sampleDflipflop = (`runState` initCBState)
+sampleDflipflop :: Sample
+sampleDflipflop = (, (950, "dflipflop.svg")) . (`runState` initCBState)
 	$ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
 
-samplePla8 :: ([OWire], CBState)
-samplePla8 = (`runState` initCBState)
+samplePla8 :: Sample
+samplePla8 = (, (2000, "pla8.svg")) . (`runState` initCBState)
 	$ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
 
-sampleZeroDetector :: ([OWire], CBState)
-sampleZeroDetector = (`runState` initCBState) $ (: []) . snd <$> zeroDetector
+sampleZeroDetector :: Sample
+sampleZeroDetector = (, (950, "zeroDetector.svg")) . (`runState` initCBState) $ (: []) . snd <$> zeroDetector
 
-sampleCarryLookahead :: Word8 -> ([OWire], CBState)
-sampleCarryLookahead n = (`runState` initCBState)
+sampleCarryLookahead :: Word8 -> Sample
+sampleCarryLookahead n = (, (2000, "carryLookahead.svg")) . (`runState` initCBState)
 	$ (\(_, _, _, cs, c) -> [cs, c]) <$> carriesN n
