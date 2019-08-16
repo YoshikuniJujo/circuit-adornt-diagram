@@ -43,7 +43,7 @@ diagramM :: CBState -> [OWire] -> DiagramMapM ()
 diagramM cbs = mapM_ (diagramM1 cbs Nothing)
 
 diagramM1 :: CBState -> Maybe Pos -> OWire -> DiagramMapM BG
-diagramM1 cbs mpos o@(OWire _ Nothing) =diagramMGen cbs mpos [o]
+diagramM1 cbs mpos o@(OWire _ Nothing) = diagramMGen cbs mpos [o]
 diagramM1 cbs mpos o@(OWire _ (Just iw)) = do
 	mlp <- case mpos of
 		Nothing -> putElement0 (BGTri o) (triGateD "0:0" "63:0")
