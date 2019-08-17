@@ -9,7 +9,7 @@ import Data.Map.Strict
 
 import qualified Data.ByteString.Char8 as BSC
 
-import Circuit.DiagramDsl
+import Circuit.DiagramDslOld
 import Circuit.Adornt.Builder
 
 data BG
@@ -24,20 +24,20 @@ data BG
 	deriving Show
 
 instance ElementIdable BG where
-	elementIdGen (BG (AndGate iw1 iw2)) =
+	elementId (BG (AndGate iw1 iw2)) =
 		"AndGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
-	elementIdGen (BG (OrGate iw1 iw2)) =
+	elementId (BG (OrGate iw1 iw2)) =
 		"OrGate-" <> BSC.pack (show iw1) <> "-" <> BSC.pack (show iw2)
-	elementIdGen (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
-	elementIdGen (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
-	elementIdGen (BGConst ow) = "ConstGate-" <> BSC.pack (show ow)
-	elementIdGen (BGLabel bg n) = "Label-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
-	elementIdGen (BGBranch bg n) = "Branch-" <> elementIdGen (BG bg) <> "-" <> BSC.pack (show n)
-	elementIdGen (BGTri ow) = "TriGate-" <> BSC.pack (show ow)
-	elementIdGen (BGLabelTri ow) = "LabelTri-" <> BSC.pack (show ow)
-	elementIdGen (BGBranchTri ow) = "BranchTri-" <> BSC.pack (show ow)
-	elementIdGen (BGDelay iw) = "Delay-" <> BSC.pack (show iw)
-	elementIdGen bg = error $ "ElementIdable BG: elementIdGen " ++ show bg
+	elementId (BG (NotGate iw)) = "NotGate-" <> BSC.pack (show iw)
+	elementId (BG (IdGate iw)) = "IdGate-" <> BSC.pack (show iw)
+	elementId (BGConst ow) = "ConstGate-" <> BSC.pack (show ow)
+	elementId (BGLabel bg n) = "Label-" <> elementId (BG bg) <> "-" <> BSC.pack (show n)
+	elementId (BGBranch bg n) = "Branch-" <> elementId (BG bg) <> "-" <> BSC.pack (show n)
+	elementId (BGTri ow) = "TriGate-" <> BSC.pack (show ow)
+	elementId (BGLabelTri ow) = "LabelTri-" <> BSC.pack (show ow)
+	elementId (BGBranchTri ow) = "BranchTri-" <> BSC.pack (show ow)
+	elementId (BGDelay iw) = "Delay-" <> BSC.pack (show iw)
+	elementId bg = error $ "ElementIdable BG: elementId " ++ show bg
 
 diagramM :: CBState -> [OWire] -> DiagramMapM ()
 diagramM cbs = mapM_ (diagramM1 cbs Nothing)

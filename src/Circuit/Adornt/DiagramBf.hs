@@ -5,14 +5,14 @@ module Circuit.Adornt.DiagramBf where
 
 import Data.Map.Strict
 import Circuit.Adornt.Builder
-import Circuit.DiagramDsl
+import Circuit.DiagramDslOld
 
 import qualified Data.ByteString.Char8 as BSC
 
 newtype ElemId = EidOWire OWire deriving Show
 
 instance ElementIdable ElemId where
-	elementIdGen (EidOWire o) = "OWire-" <> BSC.pack (show o)
+	elementId (EidOWire o) = "OWire-" <> BSC.pack (show o)
 
 diagramBfM :: CBState -> [(Maybe (ElemId, Int, Pos), OWire)] -> DiagramMapM ()
 diagramBfM _ [] = return ()
