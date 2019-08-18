@@ -3,6 +3,7 @@
 
 module Circuit.Adornt.DiagramBf where
 
+import Data.Maybe
 import Data.Map.Strict
 import Circuit.Adornt.Builder
 import Circuit.DiagramDsl
@@ -20,10 +21,42 @@ type Connection = ElemId -> DiagramMapM ()
 diagramBfM2 :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramBfM2 _ [] = return ()
 diagramBfM2 cbs ((mpre, o) : os) = do
-	case cbsGate cbs !? o of
-		Just e -> case e of
-			NotGate iw -> case mpre of
-				Nothing -> () <$ putElementEnd eid notGateD
+	os' <- case cbsGate cbs !? o of
+		Just e -> do
+			iwcps <- case e of
+				NotGate iw' -> do
+					me <- case mpre of
+						Nothing -> putElementEnd eid notGateD
+						Just (_, pos) -> putElement eid notGateD pos
+					let	mcon = connectLine0 <$> me
+					mpos <- maybe (return Nothing) ((Just <$>) . inputPosition0) me
+					return . maybeToList $ (iw',) <$> ((,) <$> mcon <*> mpos)
+				OrGate iw1 iw2 -> do
+					me <- case mpre of
+						Nothing -> putElementEnd eid orGateD
+						Just (_, pos) -> putElement eid orGateD pos
+					let	mcon1 = connectLine1 <$> me
+						mcon2 = connectLine2 <$> me
+					mpos1 <- maybe (return Nothing) ((Just <$>) . inputPosition1) me
+					mpos2 <- maybe (return Nothing) ((Just <$>) . inputPosition2) me
+					return $ catMaybes [
+						(iw1 ,) <$> ((,) <$> mcon1 <*> mpos1),
+						(iw2 ,) <$> ((,) <$> mcon2 <*> mpos2) ]
+			case mpre of
+				Nothing -> return ()
+				Just (con, _) -> con eid
+			return $ case iwcps of
+				[(iw, cp)] -> case cbsWireConn cbs !? iw of
+					Just ((ow, _) : _) -> [(Just cp, ow)]
+				[(iw1, cp1), (iw2, cp2)] -> let
+					r1 = case cbsWireConn cbs !? iw1 of
+						Just ((ow, _) : _) -> [(Just cp1, ow)]
+						Nothing -> []
+					r2 = case cbsWireConn cbs !? iw2 of
+						Just ((ow, _) : _) -> [(Just cp2, ow)] in
+					r1 ++ r2
+				[] -> []
+	diagramBfM2 cbs $ os ++ os'
 	where
 	eid = EidOWire o
 
