@@ -23,7 +23,7 @@ diagramBfM2 cbs ((mpre, o) : os) = do
 	case cbsGate cbs !? o of
 		Just e -> case e of
 			NotGate iw -> case mpre of
-				Nothing -> () <$ putElementEnd1 eid notGateD
+				Nothing -> () <$ putElementEnd eid notGateD
 	where
 	eid = EidOWire o
 
