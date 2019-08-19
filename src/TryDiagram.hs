@@ -108,11 +108,15 @@ sampleBranch2 = (, (950, "branch2.svg")) . (`runState` initCBState) $ do
 
 sampleTriGate :: Sample
 sampleTriGate = (, (950, "triGate.svg")) . (`runState` initCBState) $ do
-	(_a1, _b1, o1) <- triGate
-	(_a2, _b2, o2) <- triGate
+	(_ni, no) <- notGate
+	(_ni', no') <- notGate
+	(_a1, b1, o1) <- triGate
+	(a2, _b2, o2) <- triGate
 	(oin, oout) <- idGate
 	connectWire64 o1 oin
 	connectWire64 o2 oin
+	connectWire64 no a2
+	connectWire64 no' b1
 	return [oout]
 
 sampleDelayGate :: Sample

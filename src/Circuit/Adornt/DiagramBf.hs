@@ -13,19 +13,43 @@ import qualified Data.ByteString.Char8 as BSC
 data ElemId
 	= EidOWire OWire
 	| EidLabel IWire Int
+	| EidTri OWire
 	deriving Show
 
 instance ElementIdable ElemId where
 	elementId (EidOWire o) = "OWire-" <> BSC.pack (show o)
 	elementId (EidLabel i n) =
 		"Label-" <> BSC.pack (show i) <> "-" <> BSC.pack (show n)
+	elementId (EidTri o) = "TriGate-" <> BSC.pack (show o)
 
 type Connection = ElemId -> DiagramMapM ()
 
 diagramBfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramBfM _ [] = return ()
-diagramBfM cbs ((mpre, o) : os) = do
-	os' <- case cbsGate cbs !? o of
+diagramBfM cbs ((mpre, o@(OWire _ miw)) : os) = (diagramBfM cbs . (os ++) =<<) $ do
+	(mpre', os') <- case miw of
+		Just iw -> do
+			me <- case mpre of
+				Nothing -> putElementEnd eid (triGateD "0:0" "63:0")
+				Just (conn, pos) -> do
+					putElement eid (triGateD "0:0" "63:0") pos
+						<* conn eid
+			let	mcon0 = connectLine1 <$> me
+			mpos0 <- maybe (return Nothing) ((Just <$>) . inputPosition1) me
+			os'' <- case ((,) <$> mcon0 <*> mpos0) of
+				Just (con0, pos0) -> nextDiagramMBf cbs iw con0 pos0
+				Nothing -> return []
+			let	mcon = connectLine2 <$> me
+			mpos <- maybe (return Nothing) ((Just <$>) . inputPosition2) me
+			return ((,) <$> mcon <*> mpos, os'')
+		Nothing -> return (mpre, [])
+	(os' ++) <$> diagramBfM1 cbs mpre' o
+	where eid = EidTri o
+
+diagramBfM1 :: CBState -> Maybe (Connection, Pos) -> OWire ->
+	DiagramMapM [(Maybe (Connection, Pos), OWire)]
+diagramBfM1 cbs mpre o = do
+	case cbsGate cbs !? o of
 		Just e -> do
 			iwcps <- case e of
 				IdGate iw' -> do
@@ -75,7 +99,6 @@ diagramBfM cbs ((mpre, o) : os) = do
 				[] -> return []
 				_ -> error "Oops!!!"
 		Nothing -> return []
-	diagramBfM cbs $ os ++ os'
 	where
 	eid = EidOWire o
 
