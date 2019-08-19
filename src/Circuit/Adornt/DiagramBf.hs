@@ -26,9 +26,21 @@ instance ElementIdable ElemId where
 
 type Connection = ElemId -> DiagramMapM ()
 
+diagramDfM0 :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM0 _ [] = return ()
+diagramDfM0 cbs ((Nothing, o) : os) =
+	diagramDfM cbs . (os ++) =<< diagramDfM1Tri cbs Nothing o
+diagramDfM0 cbs os = diagramDfM cbs os
+
 diagramDfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramDfM _ [] = return ()
-diagramDfM cbs ((mpre, o@(OWire _ miw)) : os) = (diagramDfM cbs . (++ os) =<<) $ do
+diagramDfM cbs ((mpre, o) : os) =
+	diagramDfM cbs . (++ os) =<< diagramDfM1Tri cbs mpre o
+
+
+diagramDfM1Tri :: CBState -> Maybe (Connection, Pos) -> OWire  ->
+	DiagramMapM [(Maybe (Connection, Pos), OWire)]
+diagramDfM1Tri cbs mpre o@(OWire _ miw) = do
 	(mpre', os') <- case miw of
 		Just iw -> do
 			me <- case mpre of

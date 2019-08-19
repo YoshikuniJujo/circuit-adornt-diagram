@@ -12,18 +12,12 @@ import Diagrams.Backend.SVG
 import Circuit.Adornt.Builder
 import Circuit.DiagramDsl
 
-import Circuit.Adornt.Diagram
 import Circuit.Adornt.DiagramBf
 import Circuit.Adornt.Parts
 
 import CarryLookahead2
 
 type Sample = (([OWire], CBState), (Double, FilePath))
-
-trySample :: Int -> Sample -> IO ()
-trySample n ((ows, cbs), (s, fp)) =
-	either error (renderSVG ("results_old" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` n) $ diagramM cbs ows
 
 trySampleBf :: Int -> Sample -> IO ()
 trySampleBf n ((ows, cbs), (s, fp)) =
@@ -34,6 +28,11 @@ trySampleDf :: Int -> Sample -> IO ()
 trySampleDf n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results_df" </> fp) (mkWidth s) . drawDiagram)
 		. (`execDiagramMapM` n) . diagramDfM cbs $ (Nothing ,) <$> ows
+
+trySampleDf0 :: Int -> Sample -> IO ()
+trySampleDf0 n ((ows, cbs), (s, fp)) =
+	either error (renderSVG ("results_df0" </> fp) (mkWidth s) . drawDiagram)
+		. (`execDiagramMapM` n) . diagramDfM0 cbs $ (Nothing ,) <$> ows
 
 sampleNotGate :: Sample
 sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do

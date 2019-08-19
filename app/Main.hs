@@ -30,7 +30,7 @@ main = do
 	case mowsng of
 		Just (ows, ng) ->
 			either error (renderSVG fp (mkWidth s) . drawDiagram)
-				$ (`execDiagramMapM` sp) $ diagramDfM ng ((Nothing ,) <$> ows)
+				$ (`execDiagramMapM` sp) $ diagramDfM0 ng ((Nothing ,) <$> ows)
 		Nothing -> do
 			putStrLn "sl = pla of carry_lookahead"
 			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"
