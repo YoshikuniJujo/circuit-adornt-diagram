@@ -29,6 +29,13 @@ diagramBfM2 cbs ((mpre, o) : os) = do
 	os' <- case cbsGate cbs !? o of
 		Just e -> do
 			iwcps <- case e of
+				IdGate iw' -> do
+					me <- case mpre of
+						Nothing -> putElementEnd eid hLineD
+						Just (_, pos) -> putElement eid hLineD pos
+					let	mcon = connectLine0 <$> me
+					mpos <- maybe (return Nothing) ((Just <$>) . inputPosition0) me
+					return . maybeToList $ (iw',) <$> ((,) <$> mcon <*> mpos)
 				NotGate iw' -> do
 					me <- case mpre of
 						Nothing -> putElementEnd eid notGateD
@@ -47,6 +54,17 @@ diagramBfM2 cbs ((mpre, o) : os) = do
 					return $ catMaybes [
 						(iw1 ,) <$> ((,) <$> mcon1 <*> mpos1),
 						(iw2 ,) <$> ((,) <$> mcon2 <*> mpos2) ]
+				AndGate iw1 iw2 -> do
+					me <- case mpre of
+						Nothing -> putElementEnd eid andGateD
+						Just (_, pos) -> putElement eid andGateD pos
+					let	mcon1 = connectLine1 <$> me
+						mcon2 = connectLine2 <$> me
+					mpos1 <- maybe (return Nothing) ((Just <$>) . inputPosition1) me
+					mpos2 <- maybe (return Nothing) ((Just <$>) . inputPosition2) me
+					return $ catMaybes [
+						(iw1 ,) <$> ((,) <$> mcon1 <*> mpos1),
+						(iw2 ,) <$> ((,) <$> mcon2 <*> mpos2) ]
 			case mpre of
 				Nothing -> return ()
 				Just (con, _) -> con eid
@@ -55,13 +73,6 @@ diagramBfM2 cbs ((mpre, o) : os) = do
 				[(iw1, cp1), (iw2, cp2)] -> (++)
 					<$> uncurry (nextDiagramMBf cbs iw1) cp1
 					<*> uncurry (nextDiagramMBf cbs iw2) cp2
-					{- let
-					r1 = case cbsWireConn cbs !? iw1 of
-						Just ((ow, _) : _) -> [(Just cp1, ow)]
-						Nothing -> []
-					r2 = case cbsWireConn cbs !? iw2 of
-						Just ((ow, _) : _) -> [(Just cp2, ow)] in
-					return $ r1 ++ r2 -}
 				[] -> return []
 	diagramBfM2 cbs $ os ++ os'
 	where
@@ -121,16 +132,33 @@ mkLabel ((lo, poso), (li, posi)) =
 	msbi = posi + li - 1; lsbi = posi
 
 
-nextDiagramMBf :: CBState -> IWire -> Connection -> Pos -> DiagramMapM [(Maybe (Connection, Pos), OWire)]
-nextDiagramMBf cbs iw con pos = case cbsWireConn cbs !? iw of
-					Just ((ow, fo) : _) -> do
-						lbl <- newElement
-							(EidLabel iw 0)
-							(uncurry hLineTextD
-								$ mkLabel fo)
-							pos
-						con $ EidLabel iw 0
-						let	c = connectLine0 lbl
-						p <- inputPosition0 lbl
-						return [(Just (c, p), ow)]
-					Nothing -> return []
+nextDiagramMBf :: CBState -> IWire -> Connection -> Pos ->
+	DiagramMapM [(Maybe (Connection, Pos), OWire)]
+nextDiagramMBf cbs iw conn pos = case cbsWireConn cbs !? iw of
+	Just owfos -> nextDiagramMBfList iw 0 owfos conn pos
+	Nothing -> return []
+
+nextDiagramMBfList :: IWire -> Int -> [(OWire, FromOWire)] -> Connection -> Pos ->
+	DiagramMapM [(Maybe (Connection, Pos), OWire)]
+nextDiagramMBfList _ _ [] _ _ = return []
+nextDiagramMBfList iw n [(ow, fo)] conn pos = do
+	lbl <- newElement eid (uncurry hLineTextD $ mkLabel fo) pos
+	conn eid
+	let	c = connectLine0 lbl
+	p <- inputPosition0 lbl
+	return [(Just (c, p), ow)]
+	where eid = EidLabel iw n
+nextDiagramMBfList iw n ((ow, fo) : owfos) conn pos = do
+	br <- newElement eid0 branchD pos
+	conn eid0
+	p0 <- inputPosition1 br
+	lbl <- newElement eid1 (uncurry hLineTextD $ mkLabel fo) p0
+	connectLine1 br eid1
+	let	c = connectLine0 lbl
+	p <- inputPosition0 lbl
+	let	c' = connectLine2 br
+	p' <- inputPosition2 br
+	((Just (c, p), ow) :) <$> nextDiagramMBfList iw (n + 2) owfos c' p'
+	where
+	eid0 = EidLabel iw n
+	eid1 = EidLabel iw $ n + 1
