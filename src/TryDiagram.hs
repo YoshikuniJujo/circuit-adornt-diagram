@@ -30,11 +30,6 @@ trySampleBf ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results" </> fp) (mkWidth s) . drawDiagram)
 		. (`execDiagramMapM` 4) . diagramBfM cbs $ (Nothing ,) <$> ows
 
-trySampleBf2 :: Sample -> IO ()
-trySampleBf2 ((ows, cbs), (s, fp)) =
-	either error (renderSVG ("results2" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` 4) . diagramBfM2 cbs $ (Nothing ,) <$> ows
-
 sampleNotGate :: Sample
 sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do
 	(_, ow) <- notGate
