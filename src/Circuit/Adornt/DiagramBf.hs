@@ -11,10 +11,15 @@ import Circuit.DiagramDsl
 import qualified Data.ByteString.Char8 as BSC
 import qualified Circuit.DiagramDslOld as O
 
-newtype ElemId = EidOWire OWire deriving Show
+data ElemId
+	= EidOWire OWire
+	| EidLabel IWire Int
+	deriving Show
 
 instance ElementIdable ElemId where
 	elementId (EidOWire o) = "OWire-" <> BSC.pack (show o)
+	elementId (EidLabel i n) =
+		"Label-" <> BSC.pack (show i) <> "-" <> BSC.pack (show n)
 
 type Connection = ElemId -> DiagramMapM ()
 
@@ -45,17 +50,19 @@ diagramBfM2 cbs ((mpre, o) : os) = do
 			case mpre of
 				Nothing -> return ()
 				Just (con, _) -> con eid
-			return $ case iwcps of
-				[(iw, cp)] -> case cbsWireConn cbs !? iw of
-					Just ((ow, _) : _) -> [(Just cp, ow)]
-				[(iw1, cp1), (iw2, cp2)] -> let
+			case iwcps of
+				[(iw, (con, pos))] -> nextDiagramMBf cbs iw con pos
+				[(iw1, cp1), (iw2, cp2)] -> (++)
+					<$> uncurry (nextDiagramMBf cbs iw1) cp1
+					<*> uncurry (nextDiagramMBf cbs iw2) cp2
+					{- let
 					r1 = case cbsWireConn cbs !? iw1 of
 						Just ((ow, _) : _) -> [(Just cp1, ow)]
 						Nothing -> []
 					r2 = case cbsWireConn cbs !? iw2 of
 						Just ((ow, _) : _) -> [(Just cp2, ow)] in
-					r1 ++ r2
-				[] -> []
+					return $ r1 ++ r2 -}
+				[] -> return []
 	diagramBfM2 cbs $ os ++ os'
 	where
 	eid = EidOWire o
@@ -105,3 +112,25 @@ diagramBfM cbs ((mpre, o) : os) = do
 	diagramBfM cbs $ os ++ os'
 	where
 	eid = EidOWire o
+
+mkLabel :: FromOWire -> (String, String)
+mkLabel ((lo, poso), (li, posi)) =
+	(show msbo ++ ":" ++ show lsbo, show msbi ++ ":" ++ show lsbi)
+	where
+	msbo = poso + lo - 1; lsbo = poso
+	msbi = posi + li - 1; lsbi = posi
+
+
+nextDiagramMBf :: CBState -> IWire -> Connection -> Pos -> DiagramMapM [(Maybe (Connection, Pos), OWire)]
+nextDiagramMBf cbs iw con pos = case cbsWireConn cbs !? iw of
+					Just ((ow, fo) : _) -> do
+						lbl <- newElement
+							(EidLabel iw 0)
+							(uncurry hLineTextD
+								$ mkLabel fo)
+							pos
+						con $ EidLabel iw 0
+						let	c = connectLine0 lbl
+						p <- inputPosition0 lbl
+						return [(Just (c, p), ow)]
+					Nothing -> return []
