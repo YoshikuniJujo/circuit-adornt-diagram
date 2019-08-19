@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
 module Main where
@@ -7,7 +8,8 @@ import Diagrams.Prelude
 import Diagrams.Backend.SVG
 
 import Circuit.DiagramDsl
-import Circuit.Adornt.Diagram
+-- import Circuit.Adornt.Diagram
+import Circuit.Adornt.DiagramBf
 
 import TryDiagram
 
@@ -28,7 +30,7 @@ main = do
 	case mowsng of
 		Just (ows, ng) ->
 			either error (renderSVG fp (mkWidth s) . drawDiagram)
-				$ (`execDiagramMapM` sp) $ diagramM ng ows
+				$ (`execDiagramMapM` sp) $ diagramDfM ng ((Nothing ,) <$> ows)
 		Nothing -> do
 			putStrLn "sl = pla of carry_lookahead"
 			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"

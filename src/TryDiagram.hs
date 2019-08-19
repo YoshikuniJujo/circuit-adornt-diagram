@@ -20,15 +20,20 @@ import CarryLookahead2
 
 type Sample = (([OWire], CBState), (Double, FilePath))
 
-trySample :: Sample -> IO ()
-trySample ((ows, cbs), (s, fp)) =
+trySample :: Int -> Sample -> IO ()
+trySample n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results_old" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` 4) $ diagramM cbs ows
+		. (`execDiagramMapM` n) $ diagramM cbs ows
 
-trySampleBf :: Sample -> IO ()
-trySampleBf ((ows, cbs), (s, fp)) =
+trySampleBf :: Int -> Sample -> IO ()
+trySampleBf n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` 4) . diagramBfM cbs $ (Nothing ,) <$> ows
+		. (`execDiagramMapM` n) . diagramBfM cbs $ (Nothing ,) <$> ows
+
+trySampleDf :: Int -> Sample -> IO ()
+trySampleDf n ((ows, cbs), (s, fp)) =
+	either error (renderSVG ("results_df" </> fp) (mkWidth s) . drawDiagram)
+		. (`execDiagramMapM` n) . diagramDfM cbs $ (Nothing ,) <$> ows
 
 sampleNotGate :: Sample
 sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do
@@ -154,16 +159,16 @@ sampleMultipleOr :: Sample
 sampleMultipleOr = (, (950, "multipleOr.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple orGate 31
 
 sampleMultipleXor :: Sample
-sampleMultipleXor = (, (950, "multipleXor.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple xorGate 43
+sampleMultipleXor = (, (1900, "multipleXor.svg")) . (`runState` initCBState) $ (: []) . snd <$> multiple xorGate 43
 
 sampleDecoder :: Sample
-sampleDecoder = (, (950, "decodre.svg")) . (`runState` initCBState) $ snd <$> decoder 8
+sampleDecoder = (, (950, "decoder.svg")) . (`runState` initCBState) $ snd <$> decoder 8
 
 sampleMux4 :: Sample
-sampleMux4 = (, (950, "mux4.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
+sampleMux4 = (, (1900, "mux4.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 4
 
 sampleMux13 :: Sample
-sampleMux13 = (, (950, "mux13.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
+sampleMux13 = (, (1900, "mux13.svg")) . (`runState` initCBState) $ (\(_, _, o) -> [o]) <$> multiplexer 13
 
 sampleSrlatch :: Sample
 sampleSrlatch = (, (950, "srlatch.svg")) . (`runState` initCBState)
@@ -173,7 +178,7 @@ sampleDlatch :: Sample
 sampleDlatch = (, (950, "dlatch.svg")) . (`runState` initCBState) $ (\(_, _, q, q_) -> [q, q_]) <$> dlatch
 
 sampleDflipflop :: Sample
-sampleDflipflop = (, (950, "dflipflop.svg")) . (`runState` initCBState)
+sampleDflipflop = (, (1900, "dflipflop.svg")) . (`runState` initCBState)
 	$ (\(_, _, q, q_) -> [q, q_]) <$> dflipflop
 
 samplePla8 :: Sample
@@ -181,7 +186,7 @@ samplePla8 = (, (2000, "pla8.svg")) . (`runState` initCBState)
 	$ (: []) . snd <$> pla8 [(3, 8), (9, 7), (15, 123)]
 
 sampleZeroDetector :: Sample
-sampleZeroDetector = (, (950, "zeroDetector.svg")) . (`runState` initCBState) $ (: []) . snd <$> zeroDetector
+sampleZeroDetector = (, (1900, "zeroDetector.svg")) . (`runState` initCBState) $ (: []) . snd <$> zeroDetector
 
 sampleCarryLookahead :: Word8 -> Sample
 sampleCarryLookahead n = (, (2000, "carryLookahead.svg")) . (`runState` initCBState)
