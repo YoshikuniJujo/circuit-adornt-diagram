@@ -54,6 +54,9 @@ diagramBfM1 cbs mpre o = do
 	case cbsGate cbs !? o of
 		Just e -> do
 			iwcps <- case e of
+				ConstGate w -> case mpre of
+					Nothing -> [] <$ putElementEnd eid (constGateD w)
+					Just (_, pos) -> [] <$ putElement eid (constGateD w) pos
 				IdGate iw' -> do
 					me <- case mpre of
 						Nothing -> putElementEnd eid hLineD
@@ -114,9 +117,14 @@ mkLabel ((lo, poso), (li, posi)) =
 
 nextDiagramMBf :: CBState -> IWire -> Connection -> Pos ->
 	DiagramMapM [(Maybe (Connection, Pos), OWire)]
-nextDiagramMBf cbs iw conn pos = case cbsWireConn cbs !? iw of
-	Just owfos -> nextDiagramMBfList iw 0 owfos conn pos
-	Nothing -> return []
+nextDiagramMBf cbs iw conn pos = do
+	md <- checkDelay cbs conn pos iw
+	let	(conn', pos') = case md of
+			Just cp -> cp
+			Nothing -> (conn, pos)
+	case cbsWireConn cbs !? iw of
+		Just owfos -> nextDiagramMBfList iw 0 owfos conn' pos'
+		Nothing -> return []
 
 nextDiagramMBfList :: IWire -> Int -> [(OWire, FromOWire)] -> Connection -> Pos ->
 	DiagramMapM [(Maybe (Connection, Pos), OWire)]
@@ -143,11 +151,12 @@ nextDiagramMBfList iw n ((ow, fo) : owfos) conn pos = do
 	eid0 = EidLabel iw n
 	eid1 = EidLabel iw $ n + 1
 
-checkDelay :: CBState -> Pos -> IWire -> DiagramMapM (Maybe (Connection, Pos))
-checkDelay cbs ip iw = case cbsDelay cbs !? iw of
+checkDelay :: CBState -> Connection -> Pos -> IWire -> DiagramMapM (Maybe (Connection, Pos))
+checkDelay cbs conn ip iw = case cbsDelay cbs !? iw of
 	Just d -> do
 		e <- newElement (EidDelay iw) (delayD d) ip
-		let	conn = connectLine0 e
-		pos <- inputPosition0 e
-		return (Just (conn, pos))
+		let	conn' = connectLine0 e
+		conn $ EidDelay iw
+		pos' <- inputPosition0 e
+		return (Just (conn', pos'))
 	Nothing -> return Nothing
