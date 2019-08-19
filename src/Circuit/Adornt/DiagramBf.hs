@@ -14,6 +14,7 @@ data ElemId
 	= EidOWire OWire
 	| EidLabel IWire Int
 	| EidTri OWire
+	| EidDelay IWire
 	deriving Show
 
 instance ElementIdable ElemId where
@@ -21,6 +22,7 @@ instance ElementIdable ElemId where
 	elementId (EidLabel i n) =
 		"Label-" <> BSC.pack (show i) <> "-" <> BSC.pack (show n)
 	elementId (EidTri o) = "TriGate-" <> BSC.pack (show o)
+	elementId (EidDelay i) = "Delay-" <> BSC.pack (show i)
 
 type Connection = ElemId -> DiagramMapM ()
 
@@ -140,3 +142,12 @@ nextDiagramMBfList iw n ((ow, fo) : owfos) conn pos = do
 	where
 	eid0 = EidLabel iw n
 	eid1 = EidLabel iw $ n + 1
+
+checkDelay :: CBState -> Pos -> IWire -> DiagramMapM (Maybe (Connection, Pos))
+checkDelay cbs ip iw = case cbsDelay cbs !? iw of
+	Just d -> do
+		e <- newElement (EidDelay iw) (delayD d) ip
+		let	conn = connectLine0 e
+		pos <- inputPosition0 e
+		return (Just (conn, pos))
+	Nothing -> return Nothing
