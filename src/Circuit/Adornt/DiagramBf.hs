@@ -3,7 +3,11 @@
 
 module Circuit.Adornt.DiagramBf where
 
+import qualified Prelude as P
+import Prelude
+
 import Control.Arrow
+import Control.Monad
 import Data.Maybe
 import Data.Map.Strict
 import Circuit.Adornt.Builder
@@ -27,20 +31,30 @@ instance ElementIdable ElemId where
 
 type Connection = ElemId -> DiagramMapM ()
 
-diagramDfM0 :: CBState -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
-diagramDfM0 cbs [] pos = diagramDfM cbs $ first Just <$> pos
-diagramDfM0 cbs (o : os) pros =
-	diagramDfM0 cbs os . (pros ++) . (first fromJust <$>) =<< diagramDfM1Tri cbs Nothing o
+newtype BlockDefinition = BlockDefinition (Map OWire ([IWire], [OWire], String))
 
-diagramDfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
-diagramDfM _ [] = return ()
-diagramDfM cbs ((mpre, o) : os) =
-	diagramDfM cbs . (++ os) =<< diagramDfM1Tri cbs mpre o
+makeBlockDefinition :: [([IWire], [OWire], String)] -> BlockDefinition
+makeBlockDefinition = BlockDefinition . P.foldr makeBlockDefinition1 empty
+
+makeBlockDefinition1 :: ([IWire], [OWire], String) ->
+	Map OWire ([IWire], [OWire], String) ->
+	Map OWire ([IWire], [OWire], String)
+makeBlockDefinition1 v@(_, ks, _) m = P.foldr (uncurry insert) m $ (, v) <$> ks
+
+diagramDfM0 :: CBState -> BlockDefinition -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM0 cbs bd [] pos = diagramDfM cbs bd $ first Just <$> pos
+diagramDfM0 cbs bd (o : os) pros =
+	diagramDfM0 cbs bd os . (pros ++) . (first fromJust <$>) =<< diagramDfM1Tri cbs bd Nothing o
+
+diagramDfM :: CBState -> BlockDefinition -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM _ _ [] = return ()
+diagramDfM cbs bd ((mpre, o) : os) =
+	diagramDfM cbs bd . (++ os) =<< diagramDfM1Tri cbs bd mpre o
 
 
-diagramDfM1Tri :: CBState -> Maybe (Connection, Pos) -> OWire  ->
+diagramDfM1Tri :: CBState -> BlockDefinition -> Maybe (Connection, Pos) -> OWire  ->
 	DiagramMapM [(Maybe (Connection, Pos), OWire)]
-diagramDfM1Tri cbs mpre o@(OWire _ miw) = do
+diagramDfM1Tri cbs bd mpre o@(OWire _ miw) = do
 	(mpre', os') <- case miw of
 		Just iw -> do
 			me <- case mpre of
@@ -57,8 +71,16 @@ diagramDfM1Tri cbs mpre o@(OWire _ miw) = do
 			mpos <- maybe (return Nothing) ((Just <$>) . inputPosition2) me
 			return ((,) <$> mcon <*> mpos, os'')
 		Nothing -> return (mpre, [])
-	(os' ++) <$> diagramBfM1 cbs mpre' o
+	(os' ++) <$> selectBlockOr cbs bd mpre' o
 	where eid = EidTri o
+
+selectBlockOr :: CBState -> BlockDefinition -> Maybe (Connection, Pos) -> OWire ->
+	DiagramMapM [(Maybe (Connection, Pos), OWire)]
+selectBlockOr cbs bd mpcs o = do
+	mr <- diagramBlockM1 cbs bd mpcs o
+	case mr of
+		Just r -> return r
+		Nothing -> diagramBfM1 cbs mpcs o
 
 diagramBfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramBfM _ [] = return ()
@@ -81,6 +103,26 @@ diagramBfM cbs ((mpre, o@(OWire _ miw)) : os) = (diagramBfM cbs . (os ++) =<<) $
 		Nothing -> return (mpre, [])
 	(os' ++) <$> diagramBfM1 cbs mpre' o
 	where eid = EidTri o
+
+diagramBlockM1 :: CBState -> BlockDefinition -> Maybe (Connection, Pos) -> OWire ->
+	DiagramMapM (Maybe [(Maybe (Connection, Pos), OWire)])
+diagramBlockM1 cbs (BlockDefinition bd) mpre o = do
+	case bd !? o of
+		Just (iws, ows, nm) -> do
+			meb <- case mpre of
+				Nothing -> putElementBlockEnd (EidOWire <$> ows) (blockD (length iws) nm)
+				Just (_, pos) -> putElementBlock (EidOWire <$> ows) (blockD (length iws) nm) pos
+			cps <- case meb of
+				Just eb -> do
+					let	conns = (`connectLineBlock` eb) <$> [0 .. length iws - 1]
+					poss <- mapM (`inputPositionBlock` eb) [0 .. length iws - 1]
+					return $ zip conns poss
+				Nothing -> return []
+			case mpre of
+				Nothing -> return ()
+				Just (con, _) -> con (EidOWire o)
+			Just . concat <$> zipWithM (uncurry . nextDiagramMBf cbs) iws cps
+		Nothing -> return Nothing
 
 diagramBfM1 :: CBState -> Maybe (Connection, Pos) -> OWire ->
 	DiagramMapM [(Maybe (Connection, Pos), OWire)]

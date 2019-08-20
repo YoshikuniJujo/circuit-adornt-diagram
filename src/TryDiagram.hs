@@ -4,6 +4,7 @@
 module TryDiagram where
 
 import Control.Monad.State
+import Data.Map.Strict
 import Data.Word
 import System.FilePath
 import Diagrams.Prelude
@@ -27,12 +28,17 @@ trySampleBf n ((ows, cbs), (s, fp)) =
 trySampleDf :: Int -> Sample -> IO ()
 trySampleDf n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results_df" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` n) . diagramDfM cbs $ (Nothing ,) <$> ows
+		. (`execDiagramMapM` n) . diagramDfM cbs (BlockDefinition empty) $ (Nothing ,) <$> ows
 
 trySampleDf0 :: Int -> Sample -> IO ()
 trySampleDf0 n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results_df0" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` n) $ diagramDfM0 cbs ows []
+		. (`execDiagramMapM` n) $ diagramDfM0 cbs (BlockDefinition empty) ows []
+
+trySampleWithBlock :: Int -> SampleBlock -> IO ()
+trySampleWithBlock n (((ows, bd), cbs), (s, fp)) =
+	either error (renderSVG ("results_df0" </> fp) (mkWidth s) . drawDiagram)
+		. (`execDiagramMapM` n) $ diagramDfM0 cbs (makeBlockDefinition bd) ows []
 
 sampleNotGate :: Sample
 sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do
@@ -66,6 +72,28 @@ sampleXorGate :: Sample
 sampleXorGate = (, (950, "xorGate.svg")) . (`runState` initCBState) $ do
 	(_, _, o) <- xorGate
 	return [o]
+
+type Block = ([IWire], [OWire], String)
+
+xorGateBlock :: CircuitBuilder ((IWire, IWire, OWire), [Block])
+xorGateBlock = do
+	(a, b, o) <- xorGate
+	return ((a, b, o), [([a, b], [o], "xor")])
+
+useXorGateBlock :: CircuitBuilder ([OWire], [Block])
+useXorGateBlock = do
+	((_a1, _b1, o1), blk1) <- xorGateBlock
+	((a2, _b2, o2), blk2) <- xorGateBlock
+	((_a3, b3, o3), blk3) <- xorGateBlock
+	connectWire64 o1 a2
+	connectWire64 o2 b3
+	return ([o3], blk1 ++ blk2 ++ blk3)
+--	return ([o3], blk2 ++ blk3)
+
+type SampleBlock = ((([OWire], [([IWire], [OWire], String)]), CBState), (Double, FilePath))
+
+sampleXorGateBlock :: SampleBlock
+sampleXorGateBlock = (, (950, "xorGateBlock.svg")) . (`runState` initCBState) $ useXorGateBlock
 
 sampleAndNotBGate :: Sample
 sampleAndNotBGate = (, (950, "andNotBGate.svg")) . (`runState` initCBState) $ do
