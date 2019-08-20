@@ -3,6 +3,7 @@
 
 module Circuit.Adornt.DiagramBf where
 
+import Control.Arrow
 import Data.Maybe
 import Data.Map.Strict
 import Circuit.Adornt.Builder
@@ -26,11 +27,10 @@ instance ElementIdable ElemId where
 
 type Connection = ElemId -> DiagramMapM ()
 
-diagramDfM0 :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
-diagramDfM0 _ [] = return ()
-diagramDfM0 cbs ((Nothing, o) : os) =
-	diagramDfM cbs . (os ++) =<< diagramDfM1Tri cbs Nothing o
-diagramDfM0 cbs os = diagramDfM cbs os
+diagramDfM0 :: CBState -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM0 cbs [] pos = diagramDfM cbs $ first Just <$> pos
+diagramDfM0 cbs (o : os) pros =
+	diagramDfM0 cbs os . (pros ++) . (first fromJust <$>) =<< diagramDfM1Tri cbs Nothing o
 
 diagramDfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramDfM _ [] = return ()

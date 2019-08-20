@@ -32,7 +32,7 @@ trySampleDf n ((ows, cbs), (s, fp)) =
 trySampleDf0 :: Int -> Sample -> IO ()
 trySampleDf0 n ((ows, cbs), (s, fp)) =
 	either error (renderSVG ("results_df0" </> fp) (mkWidth s) . drawDiagram)
-		. (`execDiagramMapM` n) . diagramDfM0 cbs $ (Nothing ,) <$> ows
+		. (`execDiagramMapM` n) $ diagramDfM0 cbs ows []
 
 sampleNotGate :: Sample
 sampleNotGate = (, (950, "notGate.svg")) . (`runState` initCBState) $ do
