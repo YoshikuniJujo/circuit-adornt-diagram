@@ -10,7 +10,7 @@ import Control.Arrow
 import Control.Monad
 import Data.Maybe
 import Data.Map.Strict
-import Circuit.Adornt.Builder
+import Circuit.Adornt.BuilderCore
 import Circuit.DiagramDsl
 
 import qualified Data.ByteString.Char8 as BSC
@@ -169,6 +169,7 @@ diagramBfM1 cbs mpre o = do
 					return $ catMaybes [
 						(iw1 ,) <$> ((,) <$> mcon1 <*> mpos1),
 						(iw2 ,) <$> ((,) <$> mcon2 <*> mpos2) ]
+				CheatGate _ _ -> error "use named block"
 			case mpre of
 				Nothing -> return ()
 				Just (con, _) -> con eid
