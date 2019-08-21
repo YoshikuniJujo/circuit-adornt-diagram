@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TupleSections #-}
 {-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
-module Circuit.Adornt.DiagramBf where
+module Circuit.Adornt.Diagram (circuitDiagram) where
 
 import qualified Prelude as P
 import Prelude
@@ -40,6 +40,12 @@ makeBlockDefinition1 :: ([IWire], [OWire], String) ->
 	Map OWire ([IWire], [OWire], String) ->
 	Map OWire ([IWire], [OWire], String)
 makeBlockDefinition1 v@(_, ks, _) m = P.foldr (uncurry insert) m $ (, v) <$> ks
+
+circuitDiagram :: CBState -> [OWire] -> Int -> Either String DiagramMap
+circuitDiagram cbs os sp = diagramM cbs os `execDiagramMapM` sp
+
+diagramM :: CBState -> [OWire] -> DiagramMapM ()
+diagramM cbs os = diagramDfM0 cbs os []
 
 diagramDfM0 :: CBState -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
 diagramDfM0 cbs [] pos = diagramDfM cbs $ first Just <$> pos
@@ -82,6 +88,7 @@ selectBlockOr cbs bd mpcs o = do
 		Just r -> return r
 		Nothing -> diagramBfM1 cbs mpcs o
 
+{-
 diagramBfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
 diagramBfM _ [] = return ()
 diagramBfM cbs ((mpre, o@(OWire _ miw)) : os) = (diagramBfM cbs . (os ++) =<<) $ do
@@ -103,6 +110,7 @@ diagramBfM cbs ((mpre, o@(OWire _ miw)) : os) = (diagramBfM cbs . (os ++) =<<) $
 		Nothing -> return (mpre, [])
 	(os' ++) <$> diagramBfM1 cbs mpre' o
 	where eid = EidTri o
+	-}
 
 diagramBlockM1 :: CBState -> BlockDefinition -> Maybe (Connection, Pos) -> OWire ->
 	DiagramMapM (Maybe [(Maybe (Connection, Pos), OWire)])

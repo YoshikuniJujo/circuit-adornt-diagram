@@ -8,8 +8,7 @@ import Diagrams.Prelude
 import Diagrams.Backend.SVG
 
 import Circuit.DiagramDsl
--- import Circuit.Adornt.Diagram
-import Circuit.Adornt.DiagramBf
+import Circuit.Adornt.Diagram
 
 import TryDiagram
 
@@ -30,7 +29,8 @@ main = do
 	case mowsng of
 		Just (ows, ng) ->
 			either error (renderSVG fp (mkWidth s) . drawDiagram)
-				. (`execDiagramMapM` sp) $ diagramDfM0 ng ows []
+				$ circuitDiagram ng ows sp
+--				. (`execDiagramMapM` sp) $ diagramM ng ows
 		Nothing -> do
 			putStrLn "sl = pla of carry_lookahead"
 			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"
