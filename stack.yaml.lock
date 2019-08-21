@@ -34,6 +34,20 @@ packages:
     commit: 5d2daf744ae3afc1be3915495d21034dfbb33282
 - completed:
     cabal-file:
+      size: 1494
+      sha256: 43beff3307e2a2a25e07a4c5ffaf627940905b732ebaf8d29e7ac55c1e18f8f3
+    name: circuit-adornt-samples
+    version: 0.1.0.0
+    git: https://github.com/YoshikuniJujo/circuit-adornt-samples.git
+    pantry-tree:
+      size: 607
+      sha256: 442df2215a1783786aeec0ee28b0d4a49e142cee19dc75ea0545606a0d7c93e9
+    commit: 68e1c694fd5233b8063782a481c4c3ee4cc93f47
+  original:
+    git: https://github.com/YoshikuniJujo/circuit-adornt-samples.git
+    commit: 68e1c694fd5233b8063782a481c4c3ee4cc93f47
+- completed:
+    cabal-file:
       size: 1567
       sha256: e51da479f671961858460882105919604c455cf8b8302a4e56229893b7491e1a
     name: circuit-adornt-parts

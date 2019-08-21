@@ -14,9 +14,8 @@ import Circuit.Adornt.Builder
 import Circuit.DiagramDsl
 
 import Circuit.Adornt.DiagramBf
+import Circuit.Adornt.Samples.CarryLookahead2
 import Circuit.Adornt.Parts
-
-import CarryLookahead2
 
 type Sample = (([OWire], CBState), (Double, FilePath))
 

@@ -29,6 +29,7 @@ dependencies:
 - diagrams-svg
 - circuit-adornt-build
 - circuit-diagram-dsl
+- circuit-adornt-samples
 - circuit-adornt-parts
 
 library:
