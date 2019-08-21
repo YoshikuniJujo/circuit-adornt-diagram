@@ -41,15 +41,15 @@ makeBlockDefinition1 :: ([IWire], [OWire], String) ->
 	Map OWire ([IWire], [OWire], String)
 makeBlockDefinition1 v@(_, ks, _) m = P.foldr (uncurry insert) m $ (, v) <$> ks
 
-diagramDfM0 :: CBState -> BlockDefinition -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
-diagramDfM0 cbs bd [] pos = diagramDfM cbs bd $ first Just <$> pos
-diagramDfM0 cbs bd (o : os) pros =
-	diagramDfM0 cbs bd os . (pros ++) . (first fromJust <$>) =<< diagramDfM1Tri cbs bd Nothing o
+diagramDfM0 :: CBState -> [OWire] -> [((Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM0 cbs [] pos = diagramDfM cbs $ first Just <$> pos
+diagramDfM0 cbs (o : os) pros =
+	diagramDfM0 cbs os . (pros ++) . (first fromJust <$>) =<< diagramDfM1Tri cbs (makeBlockDefinition $ cbsBlock cbs) Nothing o
 
-diagramDfM :: CBState -> BlockDefinition -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
-diagramDfM _ _ [] = return ()
-diagramDfM cbs bd ((mpre, o) : os) =
-	diagramDfM cbs bd . (++ os) =<< diagramDfM1Tri cbs bd mpre o
+diagramDfM :: CBState -> [(Maybe (Connection, Pos), OWire)] -> DiagramMapM ()
+diagramDfM _ [] = return ()
+diagramDfM cbs ((mpre, o) : os) =
+	diagramDfM cbs . (++ os) =<< diagramDfM1Tri cbs (makeBlockDefinition $ cbsBlock cbs) mpre o
 
 
 diagramDfM1Tri :: CBState -> BlockDefinition -> Maybe (Connection, Pos) -> OWire  ->

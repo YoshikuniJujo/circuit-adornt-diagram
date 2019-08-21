@@ -13,11 +13,11 @@ packages:
     git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
     pantry-tree:
       size: 776
-      sha256: bf182314cb1f9e8baab30ffa9ac7126ac4e440756a7ffb0c04a5a88a04ac32fe
-    commit: 1bafa30bbc5e729d7f7d5c1f50a172e84b484d3f
+      sha256: 83de27932aa069709f6a4a75490bc3f2532f0b568b4ff3431e6206e9bb059261
+    commit: 50759de5c3ba9814ccb9aa579f0e543b4455d98d
   original:
     git: https://github.com/YoshikuniJujo/circuit-adornt-build.git
-    commit: 1bafa30bbc5e729d7f7d5c1f50a172e84b484d3f
+    commit: 50759de5c3ba9814ccb9aa579f0e543b4455d98d
 - completed:
     cabal-file:
       size: 5291

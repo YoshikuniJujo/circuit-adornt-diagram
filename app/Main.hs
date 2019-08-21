@@ -3,7 +3,6 @@
 
 module Main where
 
-import Data.Map.Strict
 import System.Environment
 import Diagrams.Prelude
 import Diagrams.Backend.SVG
@@ -31,7 +30,7 @@ main = do
 	case mowsng of
 		Just (ows, ng) ->
 			either error (renderSVG fp (mkWidth s) . drawDiagram)
-				. (`execDiagramMapM` sp) $ diagramDfM0 ng (BlockDefinition empty) ows []
+				. (`execDiagramMapM` sp) $ diagramDfM0 ng ows []
 		Nothing -> do
 			putStrLn "sl = pla of carry_lookahead"
 			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"
