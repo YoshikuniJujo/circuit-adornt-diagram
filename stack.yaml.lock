@@ -27,11 +27,11 @@ packages:
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
     pantry-tree:
       size: 1567
-      sha256: 85ae650c7c1b567a19180b94e576a1403ed5224d685988994c79490d04d4ffc0
-    commit: 5d2daf744ae3afc1be3915495d21034dfbb33282
+      sha256: 987ba40de7b7d06e7367276a0154889bf359cde096d6562cd150b471f729c605
+    commit: 392b034eb11eeb750dd00809a726ccb926e39aae
   original:
     git: https://github.com/YoshikuniJujo/circuit-diagram-dsl.git
-    commit: 5d2daf744ae3afc1be3915495d21034dfbb33282
+    commit: 392b034eb11eeb750dd00809a726ccb926e39aae
 - completed:
     cabal-file:
       size: 1494

@@ -8,6 +8,7 @@ import Prelude
 
 import Control.Arrow
 import Control.Monad
+import Control.Monad.State
 import Data.Maybe
 import Data.Map.Strict
 import Circuit.Adornt.BuilderCore
@@ -41,8 +42,11 @@ makeBlockDefinition1 :: ([IWire], [OWire], String) ->
 	Map OWire ([IWire], [OWire], String)
 makeBlockDefinition1 v@(_, ks, _) m = P.foldr (uncurry insert) m $ (, v) <$> ks
 
-circuitDiagram :: CBState -> [OWire] -> Int -> Either String DiagramMap
-circuitDiagram cbs os sp = diagramM cbs os `execDiagramMapM` sp
+circuitDiagram :: Int -> CircuitBuilder [OWire] -> Either String DiagramMap
+circuitDiagram sp cb = uncurry (flip circuitDiagram') (cb `runState` initCBState) sp
+
+circuitDiagram' :: CBState -> [OWire] -> Int -> Either String DiagramMap
+circuitDiagram' cbs os sp = diagramM cbs os `execDiagramMapM` sp
 
 diagramM :: CBState -> [OWire] -> DiagramMapM ()
 diagramM cbs os = diagramDfM0 cbs os []

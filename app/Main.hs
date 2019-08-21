@@ -27,10 +27,9 @@ main = do
 				else Nothing
 			_ -> Nothing
 	case mowsng of
-		Just (ows, ng) ->
+		Just cb ->
 			either error (renderSVG fp (mkWidth s) . drawDiagram)
-				$ circuitDiagram ng ows sp
---				. (`execDiagramMapM` sp) $ diagramM ng ows
+				$ circuitDiagram sp cb
 		Nothing -> do
 			putStrLn "sl = pla of carry_lookahead"
 			putStrLn "n = 1, 2, 4, 8, 16, 32 or 64"
